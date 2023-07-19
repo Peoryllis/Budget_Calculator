@@ -6,11 +6,14 @@ Makes the main calculator where all the parts come together and makes one calcul
 """
 
 import tkinter as tk
+import time
 
 root = tk.Tk()
 root.geometry('1500x900') #set size of window
+root['bg'] = '#7BB4EE' #nakes for a soft, neutral blue background
+root.title('Budget Calculator')
 
-root['bg'] = 'blue'
+
 
 root.mainloop() #show the window
 

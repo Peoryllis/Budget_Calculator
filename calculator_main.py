@@ -8,7 +8,9 @@ Makes the main calculator where all the parts come together and makes one calcul
 import tkinter as tk
 
 root = tk.Tk()
-root.geometry('1500x900')
+root.geometry('1500x900') #set size of window
+
+root['bg'] = 'blue'
 
 root.mainloop() #show the window
 

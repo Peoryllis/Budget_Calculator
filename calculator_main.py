@@ -14,7 +14,7 @@ import tkinterPlus2
 
 root = tk.Tk()
 root.geometry('1500x900') #set size of window
-root['bg'] = '#7BB4EE' #nakes for a soft, neutral blue background
+root['bg'] = '#7BB4EE' #makes for a soft, neutral blue background
 root.title('Budget Calculator')
 
 class GraphFrame (tk.Frame):
@@ -45,7 +45,19 @@ class GraphFrame (tk.Frame):
         
         pass
     
+
+class Budget_Calculator(tk.Frame):
+    '''Budget_Calculator
+    makes the GUI budget calculator'''
     
+    def __init__(self, master, kwargs):
+        """Budget_Calculator(self, master, kwargs)
+        master: tkinter.Tk
+        kwargs: k arguments for tkinter.Frame
+        Initiates the budget_calculator
+        """
+        
+        pass 
 
 
 root.mainloop() #show the window

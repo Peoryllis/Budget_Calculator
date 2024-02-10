@@ -9,8 +9,7 @@ import tkinter as tk
 import time
 import sys
 
-sys.path.append('C:/Users/eahan/Documents/Github/')
-import tkinterPlus2
+
 
 root = tk.Tk()
 root.geometry('1500x900') #set size of window

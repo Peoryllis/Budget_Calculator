@@ -2,7 +2,7 @@
 """
 Created on Tue Jul 18 18:34:30 2023
 
-Makes the main calculator where all the parts come together and makes one calculator, ig
+Makes the main calculator where all the parts come together and makes one calculator
 """
 
 import tkinter as tk

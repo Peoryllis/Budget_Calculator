@@ -12,6 +12,7 @@ import sys
 sys.path.insert(1, '/Users/anayaahanotu/Coding/GitHub/')
 
 from Special_tkinter_objects import tkinterPlus2 as tk2
+from graphFrame import *
 
 
 
@@ -190,7 +191,7 @@ class Budget_Calculator(tk.Frame):
         self.saveButton.bind('<Button>', self.save_data) 
 
         #keep the frame up to date on the placement of all the widgets
-        
+
         self.master.update()
 
     def set_mode(self, value):

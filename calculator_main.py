@@ -74,7 +74,7 @@ class Budget_Calculator(tk.Frame):
                         font=('Georgia', 24,),
                         fg='white',
                         bg=self.unselectedColor[1],
-                        relief='raised'
+                        relief='groove'
                         )
         
         self.incomeTab.bind('<Button>', lambda: self.set_mode(0)) #make it a working button
@@ -86,7 +86,7 @@ class Budget_Calculator(tk.Frame):
                         font=('Georgia', 24,),
                         fg='white',
                         bg=self.unselectedColor[1],
-                        relief='raised'
+                        relief='groove'
                         )
         
         self.analysisTab.bind('Button', lambda: self.set_mode(1)) #make it a working button
@@ -97,8 +97,8 @@ class Budget_Calculator(tk.Frame):
                         text=self.modes[2],
                         font=('Georgia', 24,),
                         fg='white',
-                        bg=self.unselectedColor[1],
-                        relief='raised'
+                        bg=self.selectedColor[1],
+                        relief='groove'
                         )
         
         self.spendingsTab.bind('<Button>', lambda: self.set_mode(2)) #make it a working button
@@ -110,7 +110,7 @@ class Budget_Calculator(tk.Frame):
                         font=('Georgia', 24,),
                         fg='white',
                         bg=self.unselectedColor[1],
-                        relief='raised'
+                        relief='groove'
                         )
         
         self.investTab.bind('<Button>', lambda: self.set_mode(3)) #make it a working button
@@ -152,7 +152,7 @@ class Budget_Calculator(tk.Frame):
         self.investmentsFrame = None
 
         self.set_mode(0) #set default mode
-        self.revive_data(0) # get data previously saved
+        self.revive_data() # get data previously saved
         self.saveButton.bind('<Button>', self.save_data) #we put this last to make sure users do not accidentally save unused data
 
 

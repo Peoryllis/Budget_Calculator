@@ -11,6 +11,7 @@ from other_python_docs import quick_math_operations as math2
 root = tk.Tk()
 root['bg'] = 'white'
 
+
 class GraphFrame (tk.Canvas):
     '''Make a Frame to display the different graphs'''
     
@@ -48,94 +49,14 @@ class GraphFrame (tk.Canvas):
         returns none
         '''
 
-        def treat_as_range(x, y):
+        def treat_as_range(x):
             """
             treat_as_range(x, y)
             x: numeric seq: data for independant variable
-            y: numeric seq: data for dependant variable
             makes a scatterplot, assuming the range of the independant data is greater than 10
             used to make the scatterplot look cleaner
             """
             #make sure the data is in proper order
-            data = np.array(
-                list(
-                    (x[index], y[index]) for index in range (len(x))
-                ),
-                dtype = [('x', float), ('y', float)]
-            )
-
-            data = np.sort(data, order='x')
-
-            #separate the y values to make the y axis
-            yValues = list(
-                value[1] for value in data
-                )
-                        
-            #if there is a decimal range between the values, convert the min and max values to integers
-            #convert min to integer using int() function
-            #convert max to intefer using math.ceil() function to ceiling the maximum
-
-            if (max(yValues) - min(yValues)) % 1 != 0:
-                yHigh = math.ceil(max(yValues))
-                yLow = int(min(yValues))
-            else:
-                yHigh = max(yValues)
-                yLow = min(yValues)
-            
-            
-            #try to find the cleanest split of the y values... goal is to have 10 increments
-            #first, find how many values go in between the highest and lowest values
-            ySplit = math2.factors(yHigh - yLow)
-
-            #now, just get all the values in order
-            ySplit = list(
-                factor[0] for factor in ySplit
-            )
-
-            ySplit.extend(
-                list(
-                    abs(10-value) for value in ySplit
-                )
-            )
-
-            #ySplit is in two parts: the factors of the range of the y values and the distance of the factors from 10
-            #we look at the second half with the distance from ten -- index that value in the list
-            #the target ySplit will be halfway across the list, so the value indexed halfway across the list is out ySplit
-            ySplit = ySplit[
-                ySplit.index(
-                    min(
-                        ySplit[(len(ySplit)//2):]
-                    )
-                ) - (len(ySplit) // 2)
-            ]
-            #draw the lines
-            #should start at y = 100 and split evenly until it hits the length of the y axis (though shuold not be on the x axis)
-
-            #height is the ending y coordinate of the y axis
-            #length is the ending x coordinate of the x axis
-
-            for y in range(ySplit + 1):
-                yPoint = 100 + ((((height - 100)/ySplit)) * y)
-                if y != ySplit: self.create_line(
-                    101,
-                    yPoint,
-                    length,
-                    yPoint,
-                    fill='light grey',
-                    width=1
-                )
-
-                #figure out how far the text should be from y axis
-
-                textDistanceFromAxis = 10 + len(str(int(yHigh - (y * ((yHigh-yLow)/ySplit)))))
-
-                self.create_text(
-                    100 - textDistanceFromAxis,
-                    yPoint,
-                    fill='black',
-                    font=('Georgia', 10),
-                    text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
-                )
 
             #everything i did to y i also do to x now
             #set x range
@@ -252,7 +173,90 @@ class GraphFrame (tk.Canvas):
             angle=90
         )
 
-        treat_as_range(independant, dependant)
+        x = independant
+        y = dependant
+
+        data = np.array(
+                list(
+                    (x[index], y[index]) for index in range (len(x))
+                ),
+                dtype = [('x', float), ('y', float)]
+            )
+
+        data = np.sort(data, order='x')
+
+        #separate the y values to make the y axis
+        yValues = list(
+            value[1] for value in data
+            )
+                        
+        #if there is a decimal range between the values, convert the min and max values to integers
+        #convert min to integer using int() function
+        #convert max to intefer using math.ceil() function to ceiling the maximum
+
+        if (max(yValues) - min(yValues)) % 1 != 0:
+            yHigh = math.ceil(max(yValues))
+            yLow = int(min(yValues))
+        else:
+            yHigh = max(yValues)
+            yLow = min(yValues)
+            
+            
+            #try to find the cleanest split of the y values... goal is to have 10 increments
+            #first, find how many values go in between the highest and lowest values
+            ySplit = math2.factors(yHigh - yLow)
+
+            #now, just get all the values in order
+            ySplit = list(
+                factor[0] for factor in ySplit
+            )
+
+            ySplit.extend(
+                list(
+                    abs(10-value) for value in ySplit
+                )
+            )
+
+        #ySplit is in two parts: the factors of the range of the y values and the distance of the factors from 10
+        #we look at the second half with the distance from ten -- index that value in the list
+        #the target ySplit will be halfway across the list, so the value indexed halfway across the list is out ySplit
+        ySplit = ySplit[
+            ySplit.index(
+                min(
+                    ySplit[(len(ySplit)//2):]
+                )
+            ) - (len(ySplit) // 2)
+            ]
+            #draw the lines
+            #should start at y = 100 and split evenly until it hits the length of the y axis (though shuold not be on the x axis)
+
+            #height is the ending y coordinate of the y axis
+            #length is the ending x coordinate of the x axis
+
+        for y in range(ySplit + 1):
+            yPoint = 100 + ((((height - 100)/ySplit)) * y)
+            if y != ySplit: self.create_line(
+                101,
+                yPoint,
+                length,
+                yPoint,
+                fill='light grey',
+                 width=1
+            )
+
+            #figure out how far the text should be from y axis
+
+            textDistanceFromAxis = 10 + len(str(int(yHigh - (y * ((yHigh-yLow)/ySplit)))))
+
+            self.create_text(
+                100 - textDistanceFromAxis,
+                yPoint,
+                fill='black',
+                font=('Georgia', 10),
+                text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
+            )
+
+        treat_as_range(list(value[0] for value in data))
 
 
 

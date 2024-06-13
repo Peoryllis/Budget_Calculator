@@ -280,8 +280,8 @@ a = GraphFrame(
 a.pack(fill='both', expand=1)
 root.update()
 
-x = np.array([6, 2, 90, 345.8, 8, 9.2])
-y = x * 3
+x = np.array([ -8923, 4532, 7654, -3245, 998, -6423, 3121, -9584, 1102, 5678])
+y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 
 a.create_line_axis(x, y, 'years worked', 'earnings', 'Earnings Versus Years Worked')
 

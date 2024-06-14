@@ -53,7 +53,8 @@ class GraphFrame (tk.Canvas):
             """
             treat_as_range(x, y)
             x: numeric seq: data for independant variable
-            makes a scatterplot, assuming the range of the independant data is greater than 10
+            labels the x axis
+            treats x axis data as a range, and splits the range of the x axis into equal segments
             used to make the scatterplot look cleaner
             """
             #make sure the data is in proper order
@@ -126,9 +127,42 @@ class GraphFrame (tk.Canvas):
 
             return yHigh, yLow, xHigh, xLow
 
+        def treat_as_values(x):
+            '''
+            treat_as_variables(x)
+            x: seq
+            creates an x axis and labels each value on the x axis
+            '''
+            xSplit = len(x) #figure out how many columns to make
+            xValues = x
 
-        def treat_as_values(matrix):
-            pass
+
+            
+            #draw the lines
+            #should start at x = 100 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
+
+            for x in range(1, xSplit + 2):
+                xPoint = 100 + ((((length-100)/(xSplit))) * x)
+
+                print(x)
+                if x != 0: self.create_line(
+                    xPoint,
+                    height - 1,
+                    xPoint,
+                    100,
+                    fill='light grey',
+                    width=1
+                )
+
+                if x < len(xValues): self.create_text(
+                    xPoint,
+                    height + 10,
+                    fill='black',
+                    font=('Georgia', 10),
+                    text= xValues[x-1]
+                 ) # writing from left to right so its min + interval
+
+
         def treat_as_dates(matrix):
             pass
 
@@ -256,7 +290,7 @@ class GraphFrame (tk.Canvas):
                 text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
             )
 
-        treat_as_range(list(value[0] for value in data))
+        treat_as_values(list(value[0] for value in data))
 
 
 

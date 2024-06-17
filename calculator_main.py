@@ -62,8 +62,8 @@ class Budget_Calculator(tk.Frame):
 
         self.modes = ['income and expenses',
                     'income and expenses analysis',
-                    'spendings and tends',
-                    'investments'] #keep track of all possible modes
+                    'save for desires'
+                    ] #keep track of all possible modes
         
         self.mode = self.modes[0] #know what mode you are in
 
@@ -108,9 +108,9 @@ class Budget_Calculator(tk.Frame):
         
         self.analysisTab.grid(row=0, column=1, padx=2)
 
-        #create a button have user select the savings analysis section
+        #create a button have user select the budget for desires button section
 
-        self.spendingsTab = tk.Label(tabFrame, 
+        self.budgetTab = tk.Label(tabFrame, 
                         text=self.modes[2],
                         font=('Georgia', 24,),
                         fg='white',
@@ -119,27 +119,10 @@ class Budget_Calculator(tk.Frame):
                         )
         
          #make it a working button
-        self.spendingsTab.bind('<Button>', lambda: self.set_mode(2))
+        self.budgetTab.bind('<Button>', lambda: self.set_mode(2))
         
-        self.spendingsTab.grid(row=0, column=2, padx=2) #place it on the screen
+        self.budgetTab.grid(row=0, column=2, padx=2) #place it on the screen
 
-        #create a button have user select the savings analysis section
-        self.investTab = tk.Label(tabFrame, 
-                        text=self.modes[3],
-                        font=('Georgia', 24,),
-                        fg='white',
-                        bg=self.unselectedColor[1],
-                        relief='groove'
-                        )
-        
-        
-        #make it a working button
-
-        self.investTab.bind('<Button>', lambda: self.set_mode(3)) 
-        
-        #place it on the screen
-
-        self.investTab.grid(row=0, column=3, padx=2) 
 
         #allow people to save their data
 

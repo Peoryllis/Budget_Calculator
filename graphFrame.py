@@ -325,5 +325,4 @@ a.create_line_axis(x, y, 'years worked', 'earnings', 'Earnings Versus Years Work
 
 
 
-
 root.mainloop()

@@ -9,9 +9,10 @@ import tkinter as tk
 import time
 import sys
 
-sys.path.insert(1, '/Users/anayaahanotu/Coding/GitHub/')
+sys.path.insert(1, '/Users/anayaahanotu/Documents/Coding/GitHub')
 
 from Special_tkinter_objects import tkinterPlus2 as tk2
+
 from graphFrame import *
 
 

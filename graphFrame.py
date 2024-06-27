@@ -7,6 +7,7 @@ import math
 sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from other_python_docs import quick_math_operations as math2
+import datetime
 
 root = tk.Tk()
 root['bg'] = 'white'
@@ -18,7 +19,7 @@ class GraphFrame (tk.Canvas):
     def __init__(self, master, kwargs={}):
         '''GraphFrame(args, kwargs):
             master: Budget calculator
-            kwargs: dictionary: tkinter.Canvas parameters
+            kwargs: dictionary: tkinter.Canvas parameters -- NOT 'bg'
         '''
         
         tk.Canvas.__init__(self, master, bg='white', **kwargs)
@@ -163,7 +164,23 @@ class GraphFrame (tk.Canvas):
                  ) # writing from left to right so its min + interval
 
 
-        def treat_as_dates(matrix):
+        def treat_as_dates(x, timespan):
+            '''
+            treat_as_dates(x, timespan)
+            x: seq or Strings: dates: format: mm/dd/yyyy
+            y: str: format: "<num units>.<units>"
+                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
+            '''
+            #make sure the dates are in proper format: mm/dd/yyyy
+
+            #put all the data in datetime format
+
+            #Split up number of units and the units as a list so it can be easily referred
+
+            #if timespan has 'W' or 'M', make a range from the latest data to data up to 
+            # x weeks or x months older. Up to 10 increments.
+
+            #if timespan is 'Y', then have the x axis divided into year + date. Up to 10 increments.
             pass
 
         
@@ -253,14 +270,15 @@ class GraphFrame (tk.Canvas):
 
         #ySplit is in two parts: the factors of the range of the y values and the distance of the factors from 10
         #we look at the second half with the distance from ten -- index that value in the list
-        #the target ySplit will be halfway across the list, so the value indexed halfway across the list is out ySplit
+        #the target ySplit will be halfway across the list, so the value indexed halfway across the list (from the left)
+        # is out ySplit
         ySplit = ySplit[
             ySplit.index(
                 min(
                     ySplit[(len(ySplit)//2):]
-                )
+                    )
             ) - (len(ySplit) // 2)
-            ]
+        ]
             #draw the lines
             #should start at y = 100 and split evenly until it hits the length of the y axis (though shuold not be on the x axis)
 
@@ -291,12 +309,6 @@ class GraphFrame (tk.Canvas):
             )
 
         treat_as_values(list(value[0] for value in data))
-
-
-
-
-
-
 
         self.update()
     

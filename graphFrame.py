@@ -1,5 +1,4 @@
 import tkinter as tk
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sys
@@ -7,7 +6,7 @@ import math
 sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from other_python_docs import quick_math_operations as math2
-import datetime
+from datetime import datetime
 
 root = tk.Tk()
 root['bg'] = 'white'
@@ -40,14 +39,14 @@ class GraphFrame (tk.Canvas):
         
         pass
 
-    def create_line_axis(self, independant, dependant, xName='', yName='', title='', dateIncrements=None):
+    def create_line_axis(self, independant, dependant, xName='', yName='', title='', timespan=None):
         '''
         GraphFrame.make_scaterplot(independant, dependant)
         independant: seq: x-axis values
         dependant: numeric seq: y-axis values
-        dateIncrements: str: "d", "w", "m", or "y" for day, week, month, year, respectively
-        creates a graph axis
-        returns none
+        timespan: str: format: "<num units>.<units>"
+                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
+        returns None
         '''
 
         def treat_as_range(x):
@@ -62,7 +61,7 @@ class GraphFrame (tk.Canvas):
 
             #everything i did to y i also do to x now
             #set x range
-            xValues = list(value[0] for value in data)
+            xValues = x
 
             #if there is a decimal range between the xvalues, convert the min and max values to integers
             #convert min to integer using int() function
@@ -76,6 +75,9 @@ class GraphFrame (tk.Canvas):
             else:
                 xHigh = max(xValues)
                 xLow = min(xValues)
+
+
+            print(xHigh, xLow)
             
             #try to find the cleanest split of the x values... goal is to have 10 increments
             #first, find how many values go in between the highest and lowest values
@@ -102,15 +104,20 @@ class GraphFrame (tk.Canvas):
                     )
                 ) - (len(xSplit) // 2)
             ]
+
             #draw the lines
             #should start at x = 100 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
 
-            for x in range(1, xSplit + 2):
-                xPoint = 100 + ((((length-100)/(xSplit + 1))) * x)
-                if x != 0: self.create_line(
+            divisionWidth = (length - 120)/xSplit
+
+
+            for x in range(xSplit + 1):
+                xPoint = 120 + divisionWidth * x
+
+                self.create_line(
                     xPoint,
                     height - 1,
-                    xPoint,
+                    xPoint, 
                     100,
                     fill='light grey',
                     width=1
@@ -121,32 +128,32 @@ class GraphFrame (tk.Canvas):
                     height + 10,
                     fill='black',
                     font=('Georgia', 10),
-                    text= int(xLow + ((x-1) * ((xHigh-xLow)/xSplit))) # writing from left to right so its min + interval
+                    text= int(xLow + x * ((xHigh - xLow)/xSplit)) # writing from left to right so its min + interval
                 )
 
             
 
             return yHigh, yLow, xHigh, xLow
 
-        def treat_as_values(x):
+        def treat_as_text(x):
             '''
             treat_as_variables(x)
-            x: seq
+            x: seq: values of the independant variables
             creates an x axis and labels each value on the x axis
             '''
             xSplit = len(x) #figure out how many columns to make
             xValues = x
 
+            #I used xSplit - 1 to have it go through all of the x axis
+            divisionWidth = (length-120)/(xSplit - 1)
 
-            
             #draw the lines
             #should start at x = 100 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
 
-            for x in range(1, xSplit + 2):
-                xPoint = 100 + ((((length-100)/(xSplit))) * x)
+            for x in range(xSplit):
+                xPoint = 120 + x * divisionWidth
 
-                print(x)
-                if x != 0: self.create_line(
+                self.create_line(
                     xPoint,
                     height - 1,
                     xPoint,
@@ -160,7 +167,7 @@ class GraphFrame (tk.Canvas):
                     height + 10,
                     fill='black',
                     font=('Georgia', 10),
-                    text= xValues[x-1]
+                    text= xValues[x]
                  ) # writing from left to right so its min + interval
 
 
@@ -168,19 +175,43 @@ class GraphFrame (tk.Canvas):
             '''
             treat_as_dates(x, timespan)
             x: seq or Strings: dates: format: mm/dd/yyyy
-            y: str: format: "<num units>.<units>"
+            timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
             '''
             #make sure the dates are in proper format: mm/dd/yyyy
+            xValues = []
 
-            #put all the data in datetime format
+            #for each date in value, convert them to datetime format
+            #then append to xValues
+            for value in x:
+
+                #separate the day, month, and year to make sure they can be in proper formatting
+                tempFormat = value.split('/')
+
+                #properly format the day, month, and year to mm/dd/yyyy
+                for unit in range(2):
+                    tempFormat[unit] = tempFormat[unit].zfill(2)
+
+                tempFormat[-1] = tempFormat[-1].zfill(4) # year to proper format
+
+                #put tempformat back into a string so it can be translated to datetime
+                tempFormat = '{}/{}/{}'.format(*tempFormat)
+
+                format = '%m/%d/%Y'
+
+                #put the date in datetime format
+                tempFormat = datetime.strptime(tempFormat, format) 
+
+                #add it to my x values
+                xValues.append(tempFormat.date())
+                
 
             #Split up number of units and the units as a list so it can be easily referred
 
             #if timespan has 'W' or 'M', make a range from the latest data to data up to 
             # x weeks or x months older. Up to 10 increments.
 
-            #if timespan is 'Y', then have the x axis divided into year + date. Up to 10 increments.
+            #if timespan is 'Y', then have the x axis divided into month + year. Up to 10 increments.
             pass
 
         
@@ -227,18 +258,15 @@ class GraphFrame (tk.Canvas):
         x = independant
         y = dependant
 
-        data = np.array(
-                list(
-                    (x[index], y[index]) for index in range (len(x))
-                ),
-                dtype = [('x', float), ('y', float)]
-            )
+        #if independant variables is numeric, then store x as floating point values
+        #else, store them as strings
 
-        data = np.sort(data, order='x')
+        data = (pd.DataFrame({'x': x, 'y': y}))
+
 
         #separate the y values to make the y axis
         yValues = list(
-            value[1] for value in data
+            value for value in data['y']
             )
                         
         #if there is a decimal range between the values, convert the min and max values to integers
@@ -308,7 +336,7 @@ class GraphFrame (tk.Canvas):
                 text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
             )
 
-        treat_as_values(list(value[0] for value in data))
+        treat_as_dates(list(value for value in data['x']), '1.Y')
 
         self.update()
     
@@ -330,7 +358,21 @@ a = GraphFrame(
 a.pack(fill='both', expand=1)
 root.update()
 
-x = np.array([ -8923, 4532, 7654, -3245, 998, -6423, 3121, -9584, 1102, 5678])
+x = np.array([
+    '3/5/2023',
+    '3/8/2023',
+    '3/11/2023', 
+    '3/12/2023', 
+    '3/13/2023',
+    '3/21/2023',
+    '3/25/2023',
+    '3/27/2023',
+    '3/28/2023',
+    '4/22/2023',
+    ])
+
+x2 = np.array ([5551, 875, 990, 9123, -6692, -285, 4340, 7225, 3842, 9293])
+
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 
 a.create_line_axis(x, y, 'years worked', 'earnings', 'Earnings Versus Years Worked')

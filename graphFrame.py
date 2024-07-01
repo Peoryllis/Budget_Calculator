@@ -181,6 +181,22 @@ class GraphFrame (tk.Canvas):
             #make sure the dates are in proper format: mm/dd/yyyy
             xValues = []
 
+            #have all of the months of the year listed out
+            MONTHS_OF_YEAR = [
+                'Jan',
+                'Feb',
+                'Mar',
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+                ]
+
             #for each date in value, convert them to datetime format
             #then append to xValues
             for value in x:
@@ -204,14 +220,18 @@ class GraphFrame (tk.Canvas):
 
                 #add it to my x values
                 xValues.append(tempFormat.date())
-                
 
             #Split up number of units and the units as a list so it can be easily referred
+            timespan = timespan.split('.')
+
+            mostRecentDay = max(xValues)
+
+            print(mostRecentDay)
 
             #if timespan has 'W' or 'M', make a range from the latest data to data up to 
             # x weeks or x months older. Up to 10 increments.
 
-            #if timespan is 'Y', then have the x axis divided into month + year. Up to 10 increments.
+            #if timespan is 'Y', then have the x axis divided into month + year. Up to 12 increments.
             pass
 
         
@@ -362,7 +382,7 @@ x = np.array([
     '3/5/2023',
     '3/8/2023',
     '3/11/2023', 
-    '3/12/2023', 
+    '7/12/2024', 
     '3/13/2023',
     '3/21/2023',
     '3/25/2023',
@@ -375,7 +395,7 @@ x2 = np.array ([5551, 875, 990, 9123, -6692, -285, 4340, 7225, 3842, 9293])
 
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 
-a.create_line_axis(x, y, 'years worked', 'earnings', 'Earnings Versus Years Worked')
+a.create_line_axis(x, y, 'Date', 'earnings', 'Earnings Versus Date')
 
 
 

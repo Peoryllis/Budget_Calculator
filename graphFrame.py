@@ -7,7 +7,7 @@ sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from other_python_docs import quick_math_operations as math2
 import datetime
-from datetime import datetime as dt
+from datetime import datetime as dt 
 
 root = tk.Tk()
 root['bg'] = 'white'
@@ -23,6 +23,9 @@ class GraphFrame (tk.Canvas):
         '''
         
         tk.Canvas.__init__(self, master, bg='white', **kwargs)
+
+        self.types = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
+        self.type = self.types[0]
     
     def switch_graph(self, graphType):
         '''GraphFrame.switch_graph(graphType)
@@ -32,22 +35,27 @@ class GraphFrame (tk.Canvas):
         
         pass
     
-    def create_graph(self, graphType, independant, dependant):
+    def create_graph(self, independant, dependant):
         '''GraphFrame.create_graph(graphType)
-        graphType: any literal in [timeline chart, bar chart, or pie chart]
-        creates the graph for the frame to display
+        independant: seq: x-axis values
+        dependant: seq: numeric: y-axis values
         '''
         
         pass
 
-    def create_line_axis(self, independant, dependant, xName='', yName='', title='', timespan=None):
+    def create_line_axis(self, independant, dependant, xName='', yName='', title='', xAreDates=False, treatAsText =False, treatAsRange=False, timespan='1.W'):
         '''
         GraphFrame.make_scaterplot(independant, dependant)
         independant: seq: x-axis values
         dependant: numeric seq: y-axis values
+        xName: str: x-axis label
+        yName: str: y-axis label
+        title: str: title of graph
+        xAreDates: boolean: whether or not you want to look at the x axis data as a date
+        treatAsText: boolean: treat all data as text, not as dates
         timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
-        returns None
+        returns list: [list: min and max x values, list: min and max y-values]
         '''
 
         def treat_as_range(x):
@@ -69,6 +77,8 @@ class GraphFrame (tk.Canvas):
             #convert max to intefer using math.ceil() function to ceiling the maximum
             #an easier way to approach this would be to celieng the difference of the maximum and minimum
             #may do the above
+
+            xValues = list(float(value) for value in xValues)
 
             if (max(xValues) - min(xValues)) % 1 != 0:
                 xHigh = math.ceil(max(xValues))
@@ -149,7 +159,7 @@ class GraphFrame (tk.Canvas):
             divisionWidth = (length-120)/(xSplit - 1)
 
             #draw the lines
-            #should start at x = 100 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
+            #should start at x = 120 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
 
             for x in range(xSplit):
                 xPoint = 120 + x * divisionWidth
@@ -163,7 +173,7 @@ class GraphFrame (tk.Canvas):
                     width=1
                 )
 
-                if x < len(xValues): self.create_text(
+                self.create_text(
                     xPoint,
                     height + 10,
                     fill='black',
@@ -181,23 +191,6 @@ class GraphFrame (tk.Canvas):
             '''
             #make sure the dates are in proper format: mm/dd/yyyy
             xValues = []
-
-            #have all of the months of the year listed out
-            MONTHS_OF_YEAR = [
-                'Jan',
-                'Feb',
-                'Mar',
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-                ]
-
             #for each date in value, convert them to datetime format
             #then append to xValues
             for value in x:
@@ -234,13 +227,13 @@ class GraphFrame (tk.Canvas):
             #make the axis for number of weeks
             #calculate the number of days to be recorded
             if timespan[1] == 'W':
-                numDays = 7 * int(timespan[0])
+                numDays = 7 * (int(timespan[0]))
                         
             elif timespan[1] == 'M':
-                numDays = 30 * int(timespan[0])
+                numDays = 30 * (int(timespan[0]))
 
             elif timespan[1] == 'Y':
-                numDays = 365 * int(timespan[0])
+                numDays = 365 * (int(timespan[0]))
 
 
             #keep track of all the days to be written. Start with the latest da
@@ -268,6 +261,8 @@ class GraphFrame (tk.Canvas):
                     abs(10 - num) for num in xInterval
                 )
 
+                #put the x values in proper order
+
                 #the value closest to ten at xSplit is indexed at the same location
                 #as the lowest value in distanceFromTen
 
@@ -279,56 +274,120 @@ class GraphFrame (tk.Canvas):
 
                 #split the xValues into ten evenly spaced increments
                 xValues = xValues[::xInterval]
+                xValues.append(allDays[-1]) 
 
-                #make a list to keep track how far apart each day is
-                percentDistance = list(1 for value in xValues)
+                #put the xvalues in chronilogical order
+                xValues = xValues [::-1]
+
+                #convert the text to mm/dd/YYYY format
+
+                oldXValues = xValues
+                xValues = []
+
+                for value in oldXValues:
+                    intervalText = str(value).split('-')
+                    intervalText = [intervalText[1], intervalText[-1], intervalText[0]]
+                    intervalText = '{}/{}/{}'.format(*intervalText)
+
+                    xValues.append(intervalText)
+
+
 
             else:
                 #get a sense of all the months
+
+                MONTHS_OF_THE_YEAR = [
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec'
+                ]
+
                 xValues = list(
                     value for value in xValues if value.day == 1
                 )
 
-                xValues.append(allDays[-1])
+                if xValues[-1].month > allDays[-1].month:
 
+                    xValues.append(datetime.date(allDays[-1].year, allDays[-1]. month, 1))
+
+                originalValues = xValues
+                
                 #figure out all the factors of xValues
 
                 xInterval = list(nums [0] for nums in math2.factors(len(xValues)))
 
                 #figure out the distance from each value is from 10
 
-                distanceFromTwelve = list(
-                    abs(12 - num) for num in xInterval
+                distanceFromTen = list(
+                    abs(10 - num) for num in xInterval
                 )
 
                 #the value closest to ten at xSplit is indexed at the same location
                 #as the lowest value in distanceFromTen
 
-                xInterval = xInterval[distanceFromTwelve.index(min(distanceFromTwelve))]
+                xInterval = xInterval[distanceFromTen.index(min(distanceFromTen))]
 
                 #our interval will be the quotient of (the length of xValues) and (the xInterval closest to ten)
 
                 xInterval = int(len(xValues)/xInterval)
 
-                xValues[::xInterval]
+                xValues = xValues[::xInterval]
 
-                percentDistance = list(
-                    1 - ( (date.day - 1) / 30) for date in xValues
-                )
-            
+                dateDifference = (xValues[-1] - xValues[-2]).days
 
+                #Include the earliest months to the chart
 
-
-            
+                while xValues[-1] > min(originalValues):
+                    xValues.append(xValues[-1] + datetime.timedelta(days=dateDifference))
 
                 
-            
 
 
 
+                xValues = xValues[::-1]
+
+                # give room for the latest month to be plotted
+
+                xValues.append(xValues[-1] - datetime.timedelta(days=dateDifference))
+
+                #convert to month then year
+                xValues = list(
+                    f'{MONTHS_OF_THE_YEAR[value.month - 1]} {value.year}' for value in xValues
+                )
 
 
-            
+            #if we do not subtract 1 from xvalues, the division would have cut off too early
+            divisionWidth = (length-120) / (len(xValues) - 1)
+
+            for interval in range(len(xValues)):
+                xPoint = 120 + ( (interval * divisionWidth))
+
+                self.create_line(
+                    xPoint,
+                    height - 1,
+                    xPoint,
+                    100,
+                    fill='gray'
+                )
+
+                self.create_text(
+                    xPoint,
+                    height + 10,
+                    fill='black',
+                    font = ("Georgia", 10),
+                    text=xValues[interval]
+                )
+
+
 
 
             #if timespan is 'Y', then have the x axis divided into month + year. Up to 12 increments.
@@ -455,7 +514,16 @@ class GraphFrame (tk.Canvas):
                 text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
             )
 
-        treat_as_dates(list(value for value in data['x']), '6.M')
+        if treatAsText:
+            treat_as_text(independant)
+        elif xAreDates:
+            treat_as_dates(independant, timespan)
+        elif treatAsRange:
+            treat_as_range(independant)
+        elif len(independant) > 10 and all(list(str(value).replace('-', '').isdecimal() for value in independant)):
+            treat_as_range(independant)
+        else:
+            treat_as_text(independant)
 
         self.update()
     
@@ -477,24 +545,13 @@ a = GraphFrame(
 a.pack(fill='both', expand=1)
 root.update()
 
-x = np.array([
-    '3/5/2023',
-    '3/8/2023',
-    '3/11/2023', 
-    '7/12/2023', 
-    '3/13/2023',
-    '3/21/2023',
-    '3/25/2023',
-    '3/27/2023',
-    '3/28/2023',
-    '4/22/2023',
-    ])
+x = np.array(['-147', '-66', '-613', '-57', '-287', '881', '-97', '-963', '230', '-224'])
 
 x2 = np.array ([5551, 875, 990, 9123, -6692, -285, 4340, 7225, 3842, 9293])
 
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 
-a.create_line_axis(x, y, 'Date', 'earnings', 'Earnings Versus Date')
+a.create_line_axis(x, y, 'Date', 'earnings', 'Earnings Versus Date', treatAsRange=True)
 
 
 

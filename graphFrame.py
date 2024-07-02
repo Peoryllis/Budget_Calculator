@@ -6,7 +6,8 @@ import math
 sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from other_python_docs import quick_math_operations as math2
-from datetime import datetime
+import datetime
+from datetime import datetime as dt
 
 root = tk.Tk()
 root['bg'] = 'white'
@@ -216,23 +217,121 @@ class GraphFrame (tk.Canvas):
                 format = '%m/%d/%Y'
 
                 #put the date in datetime format
-                tempFormat = datetime.strptime(tempFormat, format) 
+                tempFormat = dt.strptime(tempFormat, format) 
 
                 #add it to my x values
                 xValues.append(tempFormat.date())
 
             #Split up number of units and the units as a list so it can be easily referred
             timespan = timespan.split('.')
+            timespan[0] = int(timespan[0])
 
             mostRecentDay = max(xValues)
-
-            print(mostRecentDay)
 
             #if timespan has 'W' or 'M', make a range from the latest data to data up to 
             # x weeks or x months older. Up to 10 increments.
 
+            #make the axis for number of weeks
+            #calculate the number of days to be recorded
+            if timespan[1] == 'W':
+                numDays = 7 * int(timespan[0])
+                        
+            elif timespan[1] == 'M':
+                numDays = 30 * int(timespan[0])
+
+            elif timespan[1] == 'Y':
+                numDays = 365 * int(timespan[0])
+
+
+            #keep track of all the days to be written. Start with the latest da
+            allDays = [mostRecentDay] 
+
+            #for numDays number of intervals,
+            #add a date that is one day behind the last day in the list
+            for day in range(numDays):
+                    #make sure the day is within the data
+                    newDay =  allDays[-1] + datetime.timedelta(days=-1)
+                    
+                    if newDay >= min(xValues):
+                        allDays.append(newDay)
+            
+            #this range of days will be our new X values
+            xValues = allDays
+
+            if (timespan[1] == 'W' and timespan[0] < 24) or (timespan[1] == 'M' and timespan[0] < 6):
+                #figure out the length of xValues
+                xInterval = list(nums [0] for nums in math2.factors(len(xValues)))
+
+                #figure out the distance from each value is from 10
+
+                distanceFromTen = list(
+                    abs(10 - num) for num in xInterval
+                )
+
+                #the value closest to ten at xSplit is indexed at the same location
+                #as the lowest value in distanceFromTen
+
+                xInterval = xInterval[distanceFromTen.index(min(distanceFromTen))]
+
+                #our interval will be the quotient of (the length of xValues) and (the xInterval closest to ten)
+
+                xInterval = int(len(xValues)/xInterval)
+
+                #split the xValues into ten evenly spaced increments
+                xValues = xValues[::xInterval]
+
+                #make a list to keep track how far apart each day is
+                percentDistance = list(1 for value in xValues)
+
+            else:
+                #get a sense of all the months
+                xValues = list(
+                    value for value in xValues if value.day == 1
+                )
+
+                xValues.append(allDays[-1])
+
+                #figure out all the factors of xValues
+
+                xInterval = list(nums [0] for nums in math2.factors(len(xValues)))
+
+                #figure out the distance from each value is from 10
+
+                distanceFromTwelve = list(
+                    abs(12 - num) for num in xInterval
+                )
+
+                #the value closest to ten at xSplit is indexed at the same location
+                #as the lowest value in distanceFromTen
+
+                xInterval = xInterval[distanceFromTwelve.index(min(distanceFromTwelve))]
+
+                #our interval will be the quotient of (the length of xValues) and (the xInterval closest to ten)
+
+                xInterval = int(len(xValues)/xInterval)
+
+                xValues[::xInterval]
+
+                percentDistance = list(
+                    1 - ( (date.day - 1) / 30) for date in xValues
+                )
+            
+
+
+
+            
+
+                
+            
+
+
+
+
+
+            
+
+
             #if timespan is 'Y', then have the x axis divided into month + year. Up to 12 increments.
-            pass
 
         
         #clear canvas before creating scatterplot
@@ -356,7 +455,7 @@ class GraphFrame (tk.Canvas):
                 text= int(yHigh - (y * ((yHigh-yLow)/ySplit))) # writing from top to bottom so its max - interval
             )
 
-        treat_as_dates(list(value for value in data['x']), '1.Y')
+        treat_as_dates(list(value for value in data['x']), '6.M')
 
         self.update()
     
@@ -382,7 +481,7 @@ x = np.array([
     '3/5/2023',
     '3/8/2023',
     '3/11/2023', 
-    '7/12/2024', 
+    '7/12/2023', 
     '3/13/2023',
     '3/21/2023',
     '3/25/2023',

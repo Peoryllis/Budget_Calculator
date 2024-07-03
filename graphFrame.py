@@ -24,8 +24,15 @@ class GraphFrame (tk.Canvas):
         
         tk.Canvas.__init__(self, master, bg='white', **kwargs)
 
+        #give the list of modes and set the mode
         self.types = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
         self.type = self.types[0]
+
+        #keep track of the lowest and highest x and y values plotted
+        self.xLow = None
+        self.xHigh = None
+        self.yLow = None
+        self.yHigh = None
     
     def switch_graph(self, graphType):
         '''GraphFrame.switch_graph(graphType)

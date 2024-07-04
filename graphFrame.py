@@ -52,17 +52,18 @@ class GraphFrame (tk.Canvas):
 
     def create_line_axis(self, independant, dependant, xName='', yName='', title='', xAreDates=False, treatAsText =False, treatAsRange=False, timespan='1.W'):
         '''
-        GraphFrame.make_scaterplot(independant, dependant)
+        GraphFrame.create_line_axis(independant, dependant, ..., timespan = '1.W'): void
+        
         independant: seq: x-axis values
         dependant: numeric seq: y-axis values
         xName: str: x-axis label
         yName: str: y-axis label
         title: str: title of graph
         xAreDates: boolean: whether or not you want to look at the x axis data as a date
-        treatAsText: boolean: treat all data as text, not as dates
+        treatAsText: boolean: treat x data as text, not as dates or numeric
+        treatAsRange: boolean: treat x data as numeric
         timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
-        returns list: [list: min and max x values, list: min and max y-values]
         '''
 
         def treat_as_range(x):
@@ -94,8 +95,8 @@ class GraphFrame (tk.Canvas):
                 xHigh = max(xValues)
                 xLow = min(xValues)
 
-
-            print(xHigh, xLow)
+            #save the xHigh and the xLow to the class
+            self.xHigh, self.xLow = xHigh, xLow
             
             #try to find the cleanest split of the x values... goal is to have 10 increments
             #first, find how many values go in between the highest and lowest values
@@ -161,6 +162,11 @@ class GraphFrame (tk.Canvas):
             '''
             xSplit = len(x) #figure out how many columns to make
             xValues = x
+
+            
+            
+            #save the first and last index of the xValues to the class' xHigh and xLow variables
+            self.xHigh, self.xLow = xSplit[-1], xSplit[0]
 
             #I used xSplit - 1 to have it go through all of the x axis
             divisionWidth = (length-120)/(xSplit - 1)
@@ -286,6 +292,9 @@ class GraphFrame (tk.Canvas):
                 #put the xvalues in chronilogical order
                 xValues = xValues [::-1]
 
+                #save the highest and lowest x values to this class maximum and minimum values
+                self.xHigh, self.xLow = xValues[-1], xValues[0]
+
                 #convert the text to mm/dd/YYYY format
 
                 oldXValues = xValues
@@ -365,6 +374,9 @@ class GraphFrame (tk.Canvas):
                 # give room for the latest month to be plotted
 
                 xValues.append(xValues[-1] - datetime.timedelta(days=dateDifference))
+
+                #save the highest and lowest x values to this class maximum and minimum values
+                self.xHigh, self.xLow = xValues[-1], xValues[0]
 
                 #convert to month then year
                 xValues = list(
@@ -464,22 +476,27 @@ class GraphFrame (tk.Canvas):
         else:
             yHigh = max(yValues)
             yLow = min(yValues)
+
+
+        #save the highest and lowest x values to this class maximum and minimum values
+        self.yHigh, self.yLow = yHigh, yLow
+
             
             
-            #try to find the cleanest split of the y values... goal is to have 10 increments
-            #first, find how many values go in between the highest and lowest values
-            ySplit = math2.factors(yHigh - yLow)
+         #try to find the cleanest split of the y values... goal is to have 10 increments
+        #first, find how many values go in between the highest and lowest values
+        ySplit = math2.factors(yHigh - yLow)
 
-            #now, just get all the values in order
-            ySplit = list(
-                factor[0] for factor in ySplit
-            )
+        #now, just get all the values in order
+        ySplit = list(
+            factor[0] for factor in ySplit
+        )
 
-            ySplit.extend(
-                list(
-                    abs(10-value) for value in ySplit
-                )
+        ySplit.extend(
+            list(
+                abs(10-value) for value in ySplit
             )
+        )
 
         #ySplit is in two parts: the factors of the range of the y values and the distance of the factors from 10
         #we look at the second half with the distance from ten -- index that value in the list
@@ -534,8 +551,20 @@ class GraphFrame (tk.Canvas):
 
         self.update()
     
-    def make_scatterplot(self):
-        pass
+    def make_scatterplot(self, independant, dependant, xName='', yName='', title='', xAreDates=False, treatAsText =False, timespan='1.W'):
+        '''
+        GraphFrame.make_scaterplot(independant, dependant, ..., timespan='1.W'): void
+        independant: seq: x-axis values
+        dependant: numeric seq: y-axis values
+        xName: str: x-axis label
+        yName: str: y-axis label
+        title: str: title of graph
+        xAreDates: boolean: whether or not you want to look at the x axis data as a date
+        treatAsText: boolean: treat all data as text, not as dates
+        timespan: str: format: "<num units>.<units>"
+                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
+        '''
+        #check if the user wants spec
     def make_bar_graph(self):
         pass
     def make_pie_chart(self):
@@ -558,7 +587,7 @@ x2 = np.array ([5551, 875, 990, 9123, -6692, -285, 4340, 7225, 3842, 9293])
 
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 
-a.create_line_axis(x, y, 'Date', 'earnings', 'Earnings Versus Date', treatAsRange=True)
+a.make_scatterplot(x, y, 'Date', 'earnings', 'Earnings Versus Date', treatAsRange=True)
 
 
 

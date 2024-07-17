@@ -92,7 +92,7 @@ class GraphFrame (tk.Canvas):
 
             if (max(xValues) - min(xValues)) % 1 != 0:
                 xHigh = math.ceil(max(xValues))
-                xLow = int(min(xValues))
+                xLow = math.floor(min(xValues))
             else:
                 xHigh = max(xValues)
                 xLow = min(xValues)
@@ -473,7 +473,7 @@ class GraphFrame (tk.Canvas):
 
         if (max(yValues) - min(yValues)) % 1 != 0:
             yHigh = math.ceil(max(yValues))
-            yLow = int(min(yValues))
+            yLow = math.floor(min(yValues))
         else:
             yHigh = max(yValues)
             yLow = min(yValues)
@@ -481,7 +481,6 @@ class GraphFrame (tk.Canvas):
 
         #save the highest and lowest x values to this class maximum and minimum values
         self.yHigh, self.yLow = yHigh, yLow
-
             
             
          #try to find the cleanest split of the y values... goal is to have 10 increments
@@ -546,16 +545,18 @@ class GraphFrame (tk.Canvas):
         elif treatAsRange:
             treat_as_range(independant)
         elif len(independant) > 10 and all(list(tk2.is_a_number(value) for value in independant)):
-            print(1)
             treat_as_range(independant)
         else:
             treat_as_text(independant)
 
         self.update()
     
-    def make_scatterplot(self, independant, dependant, xName='', yName='', title='', xAreDates=False, treatAsText =False, timespan='1.W'):
+    def make_scatterplot(
+            self, independant, dependant, xName='', yName='', title='', xAreDates=False,
+            treatAsText =False, timespan='1.W', pointSize=10, pointColor='black'
+    ):
         '''
-        GraphFrame.make_scaterplot(independant, dependant, ..., timespan='1.W'): void
+        GraphFrame.make_scaterplot(independant, dependant, ..., pointColor='black'): void
         independant: seq: x-axis values
         dependant: numeric seq: y-axis values
         xName: str: x-axis label
@@ -565,6 +566,9 @@ class GraphFrame (tk.Canvas):
         treatAsText: boolean: treat all data as text, not as dates
         timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
+        pointSize: int or float: size of the point wanted (default: 10)
+        pointColor: str: color of point wanted (default: 'black')
+            
         '''
         #check if the user wants specifically the text to be treated as dates or as text
 
@@ -614,20 +618,27 @@ class GraphFrame (tk.Canvas):
                 infoMessage = f'x ({xName}): {currentX}, y ({yName}): {currentY}'
 
                 self.create_oval(
-                    xPosition - 5, 
-                    yPosition - 5, 
-                    xPosition + 5,
-                    yPosition + 5, 
-                    fill = 'black',
-                    tags=f'point {index + 1}'
+                    xPosition - pointSize/2, 
+                    yPosition - pointSize/2, 
+                    xPosition + pointSize/2,
+                    yPosition + pointSize/2, 
+                    fill = pointColor,
+                    tags=f'point{index}'
                 )
 
-                self.update()
+                self.tag_bind(
+                    f'point{index}',
+                    '<Enter>',
+                    lambda e, message = infoMessage: self.show_info(message),
+                    '+'
+                    )
+                self.tag_bind(f'point{index}', '<Leave>', lambda e: self.hide_info(), '+')
 
-                self.tag_bind(f'point {index + 1}', '<Enter>', lambda e: self.show_info(infoMessage))
-                self.tag_bind(f'point {index + 1}', '<Leave>', lambda e: self.hide_info())
                 
-                self.update()
+
+
+                
+            
 
         
     def make_bar_graph(self):
@@ -636,8 +647,9 @@ class GraphFrame (tk.Canvas):
         pass
     def make_pie_chart(self):
         pass
+
     def show_info(self, data):
-        self.update()
+
         self.infoBar = self.create_text(
             self.winfo_width()/2,
             self.winfo_height() - 30,
@@ -647,6 +659,17 @@ class GraphFrame (tk.Canvas):
         )
     def hide_info(self):
         self.delete(self.infoBar)
+
+    def clean_data(independant, dependant):
+        '''
+        GraphFrame.clean_data(independant, dependant)
+        independant: seq: x-axis values
+        dependant: seq: y-axis values
+        cleans the data by filtering out None types and null
+        returns DataFrame: {'x': independant, 'y': dependant}
+        '''
+
+        data = pd.DataFrame({'x': independant, 'y': dependant})
 #### test  ####
 a = GraphFrame(
     root,
@@ -665,7 +688,21 @@ x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
-a.make_scatterplot(x2, y2, 'Date', 'earnings', 'Earnings Versus Date')
+
+x3 = np.array(list(value/100 for value in range(-200, 200)))
+y3 = []
+
+for entry in x3:
+    try:
+        y3.append(math.acos(entry))
+    except Exception:
+        y3.append(None)
+    
+y3 = np.array(y3)
+
+a.clean_data(x3, y3)
+
+#a.make_scatterplot(x3, y3, 'Date', 'earnings', 'Earnings Versus Date')
 
 
 

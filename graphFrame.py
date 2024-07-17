@@ -5,6 +5,8 @@ import sys
 import math
 sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
 
+from Special_tkinter_objects import tkinterPlus2 as tk2
+
 from other_python_docs import quick_math_operations as math2
 import datetime
 from datetime import datetime as dt 
@@ -166,7 +168,7 @@ class GraphFrame (tk.Canvas):
             
             
             #save the first and last index of the xValues to the class' xHigh and xLow variables
-            self.xHigh, self.xLow = xSplit[-1], xSplit[0]
+            self.xHigh, self.xLow = None, None
 
             #I used xSplit - 1 to have it go through all of the x axis
             divisionWidth = (length-120)/(xSplit - 1)
@@ -193,7 +195,6 @@ class GraphFrame (tk.Canvas):
                     font=('Georgia', 10),
                     text= xValues[x]
                  ) # writing from left to right so its min + interval
-
 
         def treat_as_dates(x, timespan):
             '''
@@ -544,7 +545,8 @@ class GraphFrame (tk.Canvas):
             treat_as_dates(independant, timespan)
         elif treatAsRange:
             treat_as_range(independant)
-        elif len(independant) > 10 and all(list(str(value).replace('-', '').isdecimal() for value in independant)):
+        elif len(independant) > 10 and all(list(tk2.is_a_number(value) for value in independant)):
+            print(1)
             treat_as_range(independant)
         else:
             treat_as_text(independant)
@@ -564,12 +566,87 @@ class GraphFrame (tk.Canvas):
         timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
         '''
-        #check if the user wants spec
+        #check if the user wants specifically the text to be treated as dates or as text
+
+        #if the list is numeric 
+        #check if all the values in the list is numeric
+        if all( list(str(value).replace('-', '').isdecimal() for value in independant) ):
+
+            #convert them all to numbers
+            independant = np.array( list(float(value) for value in independant), dtype=float )
+
+            #align x and y into the datafram
+            data = pd.DataFrame({'x': independant, 'y': dependant})
+
+            #sort dataframe along x axis 
+            data = data.sort_values('x')
+
+            #store the new order in independant and dependnt
+            independant = np.array(data.iloc[:,0])
+            dependant = np.array(data.iloc[:,1])
+
+        
+        #keep track of the parameters
+        parameters = (independant, dependant, xName, yName, title)
+        if xAreDates:
+            self.create_line_axis(*parameters, xAreDates=True, timespan=timespan)
+        elif treatAsText:
+            self.create_line_axis(*parameters, treatAsText=True)
+        else:
+            self.create_line_axis(*parameters)
+
+        width, height = self.winfo_width() - 100, self.winfo_height() - 100
+
+        #keep track of all the points so they can all have a function
+
+        #check if it is treated as text
+        #if it is not treated as text, find the x and y posisition by relative size
+        xUnitWidth = 1/(self.xHigh - self.xLow)
+        yUnitWidth = 1/(self.yHigh - self.yLow)
+
+        if self.xHigh != None and self.xLow != None:
+            for index in range(independant.size):
+                currentX, currentY = independant[index], dependant[index]
+
+                xPosition = 120 + (width - 120) * xUnitWidth * (currentX - self.xLow)
+                yPosition = height - (height - 100) * yUnitWidth * (currentY - self.yLow)
+
+                infoMessage = f'x ({xName}): {currentX}, y ({yName}): {currentY}'
+
+                self.create_oval(
+                    xPosition - 5, 
+                    yPosition - 5, 
+                    xPosition + 5,
+                    yPosition + 5, 
+                    fill = 'black',
+                    tags=f'point {index + 1}'
+                )
+
+                self.update()
+
+                self.tag_bind(f'point {index + 1}', '<Enter>', lambda e: self.show_info(infoMessage))
+                self.tag_bind(f'point {index + 1}', '<Leave>', lambda e: self.hide_info())
+                
+                self.update()
+
+        
     def make_bar_graph(self):
+        pass
+    def make_line_chart(self):
         pass
     def make_pie_chart(self):
         pass
-
+    def show_info(self, data):
+        self.update()
+        self.infoBar = self.create_text(
+            self.winfo_width()/2,
+            self.winfo_height() - 30,
+            text=data,
+            font=('Georgia', 15),
+            fill='black'
+        )
+    def hide_info(self):
+        self.delete(self.infoBar)
 #### test  ####
 a = GraphFrame(
     root,
@@ -583,11 +660,12 @@ root.update()
 
 x = np.array(['-147', '-66', '-613', '-57', '-287', '881', '-97', '-963', '230', '-224'])
 
-x2 = np.array ([5551, 875, 990, 9123, -6692, -285, 4340, 7225, 3842, 9293])
+x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
 
 y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
+y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
-a.make_scatterplot(x, y, 'Date', 'earnings', 'Earnings Versus Date', treatAsRange=True)
+a.make_scatterplot(x2, y2, 'Date', 'earnings', 'Earnings Versus Date')
 
 
 

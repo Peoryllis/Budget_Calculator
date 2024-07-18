@@ -412,10 +412,6 @@ class GraphFrame (tk.Canvas):
 
             #if timespan is 'Y', then have the x axis divided into month + year. Up to 12 increments.
 
-        
-        #clear canvas before creating scatterplot
-        self.delete("all")
-
         #make sure canvas has up to date info on its size
         self.master.update()
         
@@ -660,7 +656,7 @@ class GraphFrame (tk.Canvas):
     def hide_info(self):
         self.delete(self.infoBar)
 
-    def clean_data(independant, dependant):
+    def clean_data(self, independant, dependant):
         '''
         GraphFrame.clean_data(independant, dependant)
         independant: seq: x-axis values
@@ -670,6 +666,9 @@ class GraphFrame (tk.Canvas):
         '''
 
         data = pd.DataFrame({'x': independant, 'y': dependant})
+
+        return data.dropna()
+
 #### test  ####
 a = GraphFrame(
     root,
@@ -689,20 +688,17 @@ y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
 
-x3 = np.array(list(value/100 for value in range(-200, 200)))
-y3 = []
-
-for entry in x3:
-    try:
-        y3.append(math.acos(entry))
-    except Exception:
-        y3.append(None)
+x3 = np.array(list((value/1000) for value in range(-20000, 20000)))
+y3 = x3 ** 2
     
 y3 = np.array(y3)
 
-a.clean_data(x3, y3)
+cleanedData = a.clean_data(x3, y3)
 
-#a.make_scatterplot(x3, y3, 'Date', 'earnings', 'Earnings Versus Date')
+x3 = np.array(cleanedData['x'])
+y3 = np.array(cleanedData['y'])
+
+a.make_scatterplot(x2, y2, 'Date', 'earnings', 'Earnings Versus Date', pointSize=1, pointColor='black')
 
 
 

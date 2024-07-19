@@ -203,31 +203,8 @@ class GraphFrame (tk.Canvas):
             timespan: str: format: "<num units>.<units>"
                 units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
             '''
-            #make sure the dates are in proper format: mm/dd/yyyy
-            xValues = []
-            #for each date in value, convert them to datetime format
-            #then append to xValues
-            for value in x:
-
-                #separate the day, month, and year to make sure they can be in proper formatting
-                tempFormat = value.split('/')
-
-                #properly format the day, month, and year to mm/dd/yyyy
-                for unit in range(2):
-                    tempFormat[unit] = tempFormat[unit].zfill(2)
-
-                tempFormat[-1] = tempFormat[-1].zfill(4) # year to proper format
-
-                #put tempformat back into a string so it can be translated to datetime
-                tempFormat = '{}/{}/{}'.format(*tempFormat)
-
-                format = '%m/%d/%Y'
-
-                #put the date in datetime format
-                tempFormat = dt.strptime(tempFormat, format) 
-
-                #add it to my x values
-                xValues.append(tempFormat.date())
+            #convert to datetime format
+            xValues = self.convert_to_datetime(x)
 
             #Split up number of units and the units as a list so it can be easily referred
             timespan = timespan.split('.')
@@ -341,13 +318,11 @@ class GraphFrame (tk.Canvas):
                 #figure out all the factors of xValues
 
                 xInterval = list(nums [0] for nums in math2.factors(len(xValues)))
-
                 #figure out the distance from each value is from 10
 
                 distanceFromTen = list(
                     abs(10 - num) for num in xInterval
                 )
-
                 #the value closest to ten at xSplit is indexed at the same location
                 #as the lowest value in distanceFromTen
 
@@ -356,10 +331,15 @@ class GraphFrame (tk.Canvas):
                 #our interval will be the quotient of (the length of xValues) and (the xInterval closest to ten)
 
                 xInterval = int(len(xValues)/xInterval)
+                
+                if xInterval != len(xValues):
+                    xValues = xValues[::xInterval]
+                else:
+                    xValues = [xValues[0], xValues[-1]]
 
-                xValues = xValues[::xInterval]
+                
 
-                dateDifference = (xValues[-1] - xValues[-2]).days
+                dateDifference = (xValues[1] - xValues[0]).days
 
                 #Include the earliest months to the chart
 
@@ -455,7 +435,25 @@ class GraphFrame (tk.Canvas):
         #if independant variables is numeric, then store x as floating point values
         #else, store them as strings
 
-        data = (pd.DataFrame({'x': x, 'y': y}))
+
+        #1. Split timespan
+        #find x days by ovncerting weeks, months, or years to days
+        #filter out any days less than that
+        if xAreDates:
+            duration = timespan.split('.')
+            if duration[1] == 'Y':
+                numDays = 365 * int(duration[0])
+            elif duration[1] == 'M':
+                numDays = 30 * int(duration[0])
+            elif duration[1] =='W':
+                numDays = 7 * int(duration[0])
+
+            x = self.convert_to_datetime(x)
+            data = pd.DataFrame({'x': x, 'y': y})
+            data = data[data.x >= max(data.x) - datetime.timedelta(days=numDays)]
+
+        else:
+            data = pd.DataFrame({'x': x ,'y': y})
 
 
         #separate the y values to make the y axis
@@ -601,14 +599,36 @@ class GraphFrame (tk.Canvas):
 
         #check if it is treated as text
         #if it is not treated as text, find the x and y posisition by relative size
-        xUnitWidth = 1/(self.xHigh - self.xLow)
+
+
+        #if X are dates, then convert each x item to datetime format
+        if xAreDates:
+            independant = np.array(self.convert_to_datetime(independant))
+
+            data = pd.DataFrame({'x': independant, 'y': dependant})
+
+            data = data[data.x >= self.xLow]
+
+            independant = np.array(data.x)
+            dependant = np.array(data.y)
+
+
+        if not xAreDates:
+            xUnitWidth = 1/(self.xHigh - self.xLow)
+        else:
+            xUnitWidth = 1 / (self.xHigh - self.xLow).days
+
         yUnitWidth = 1/(self.yHigh - self.yLow)
 
         if self.xHigh != None and self.xLow != None:
             for index in range(independant.size):
                 currentX, currentY = independant[index], dependant[index]
 
-                xPosition = 120 + (width - 120) * xUnitWidth * (currentX - self.xLow)
+                if not xAreDates: 
+                    xPosition = 120 + (width - 120) * xUnitWidth * (currentX - self.xLow)
+                else:
+                    xPosition = 120 + (width - 120) * xUnitWidth * (currentX - self.xLow).days
+
                 yPosition = height - (height - 100) * yUnitWidth * (currentY - self.yLow)
 
                 infoMessage = f'x ({xName}): {currentX}, y ({yName}): {currentY}'
@@ -619,6 +639,7 @@ class GraphFrame (tk.Canvas):
                     xPosition + pointSize/2,
                     yPosition + pointSize/2, 
                     fill = pointColor,
+                    outline=pointColor,
                     tags=f'point{index}'
                 )
 
@@ -629,23 +650,54 @@ class GraphFrame (tk.Canvas):
                     '+'
                     )
                 self.tag_bind(f'point{index}', '<Leave>', lambda e: self.hide_info(), '+')
-
-                
-
-
-                
-            
-
-        
+       
     def make_bar_graph(self):
         pass
     def make_line_chart(self):
         pass
     def make_pie_chart(self):
         pass
+    def convert_to_datetime(self, dates):
+        '''
+        GraphFrame.convert_to_datetime(dates)
+        dates: seq: str: valid dates separated by '/'
+            dates must be in month/day/YYYY format
+            Warning: if not in YYYY format, your dates may be off
+        converts all the dates in the sequence to datetime format
+        returns list: datetime.dates
+        '''
+        #store the dates in a new format
+
+        tempIndependant = []
+        for element in dates:
+
+            #split it into a list so we can work with each unit at a time
+            element = element.split("/")
+
+            for unit in range(2):
+                #make sure the month and day are in MM and DD format
+                element[unit] = element[unit].zfill(2)
+            
+            #make sure year is in YYYY format
+            element[2] = element[2].zfill(4)
+
+            #put the properly formatted months and dates into a new string
+            tempDate = "{}/{}/{}".format(*element)
+
+            #set the format for the dates
+            format = "%m/%d/%Y"
+
+            #make the newdate in date time format
+            newDate = dt.strptime(tempDate, format)
+
+            #add it to the list of dates
+            tempIndependant.append(newDate.date())
+
+        return tempIndependant
 
     def show_info(self, data):
 
+        # create an info bar on the point's 
         self.infoBar = self.create_text(
             self.winfo_width()/2,
             self.winfo_height() - 30,
@@ -653,6 +705,7 @@ class GraphFrame (tk.Canvas):
             font=('Georgia', 15),
             fill='black'
         )
+
     def hide_info(self):
         self.delete(self.infoBar)
 
@@ -673,14 +726,25 @@ class GraphFrame (tk.Canvas):
 a = GraphFrame(
     root,
     kwargs = {
-        'width': 1200,
+        'width': 850,
         'height': 800
     }
 )
 a.pack(fill='both', expand=1)
 root.update()
 
-x = np.array(['-147', '-66', '-613', '-57', '-287', '881', '-97', '-963', '230', '-224'])
+x = np.array([
+    '2/24/2023',
+    '3/23/2021', 
+    '2/19/1996',
+    '2/17/2006',
+    '9/23/1992',
+    '2/9/1907',
+    '3/9/2007',
+    '2/8/2024',
+    '9/3/2001',
+    '2/3/2007'
+])
 
 x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
 
@@ -688,17 +752,46 @@ y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
 y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
 
-x3 = np.array(list((value/1000) for value in range(-20000, 20000)))
-y3 = x3 ** 2
-    
+x3 = np.array(list(((value / 1000) for value in range(-20000, 20000))))
+y3 = []
+a=3
+b=4
+r=5
+
+for x in x3:
+    try:
+        y3.append(
+            math.sqrt(-x ** 2 + 1)
+        )
+    except Exception:
+        y3.append(None)
+
+for x in x3:
+    try:
+        y3.append(
+            -math.sqrt(-x ** 2 + 1)
+        )
+    except Exception:
+        y3.append(None)
+
+x3 = np.concatenate((x3, x3))
+
 y3 = np.array(y3)
+
 
 cleanedData = a.clean_data(x3, y3)
 
 x3 = np.array(cleanedData['x'])
 y3 = np.array(cleanedData['y'])
 
-a.make_scatterplot(x2, y2, 'Date', 'earnings', 'Earnings Versus Date', pointSize=1, pointColor='black')
+a.make_scatterplot(
+    x3, y3,
+    'X',
+    'Y',
+    'X Versus Y', 
+    pointSize=2,
+    pointColor='navy blue'
+)
 
 
 

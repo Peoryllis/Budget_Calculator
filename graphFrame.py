@@ -580,8 +580,12 @@ class GraphFrame (tk.Canvas):
             data = data.sort_values('x')
 
             #store the new order in independant and dependnt
-            independant = np.array(data.iloc[:,0])
-            dependant = np.array(data.iloc[:,1])
+            independant = np.array(data.x)
+            dependant = np.array(data.y)
+        else:
+            #make sure independant and dependant are numpy arrays anyway
+            independant = np.array(independant)
+            dependant = np.array(dependant)
 
         
         #keep track of the parameters
@@ -607,6 +611,7 @@ class GraphFrame (tk.Canvas):
 
             data = pd.DataFrame({'x': independant, 'y': dependant})
 
+            #exclude days that occur earlier than given timespan
             data = data[data.x >= self.xLow]
 
             independant = np.array(data.x)
@@ -616,10 +621,14 @@ class GraphFrame (tk.Canvas):
         if not xAreDates:
             xUnitWidth = 1/(self.xHigh - self.xLow)
         else:
-            xUnitWidth = 1 / (self.xHigh - self.xLow).days
+            xUnitWidth = 1 / (self.xHigh - self.xLow).days #make sure the day range is just a number
 
         yUnitWidth = 1/(self.yHigh - self.yLow)
 
+        #check if it is treated as text
+        #if it is, there will be no maximum or minimum x value
+        #if not treated as text, the point will be placed on the graph based on its x and y values
+        #relative to the max and min values.
         if self.xHigh != None and self.xLow != None:
             for index in range(independant.size):
                 currentX, currentY = independant[index], dependant[index]
@@ -650,6 +659,9 @@ class GraphFrame (tk.Canvas):
                     '+'
                     )
                 self.tag_bind(f'point{index}', '<Leave>', lambda e: self.hide_info(), '+')
+
+
+        self.update()
        
     def make_bar_graph(self):
         pass
@@ -723,14 +735,15 @@ class GraphFrame (tk.Canvas):
         return data.dropna()
 
 #### test  ####
-a = GraphFrame(
+
+test = GraphFrame(
     root,
     kwargs = {
         'width': 850,
         'height': 800
     }
 )
-a.pack(fill='both', expand=1)
+test.pack(fill='both', expand=1)
 root.update()
 
 x = np.array([
@@ -754,43 +767,28 @@ y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
 x3 = np.array(list(((value / 1000) for value in range(-20000, 20000))))
 y3 = []
-a=3
-b=4
-r=5
 
-for x in x3:
-    try:
-        y3.append(
-            math.sqrt(-x ** 2 + 1)
-        )
-    except Exception:
-        y3.append(None)
+y3 = list(x - math.sin(x) for x in x3)
+y3.extend(list(1 - x * math.cos(x) - math.sin(x) for x in x3))
 
-for x in x3:
-    try:
-        y3.append(
-            -math.sqrt(-x ** 2 + 1)
-        )
-    except Exception:
-        y3.append(None)
 
 x3 = np.concatenate((x3, x3))
 
 y3 = np.array(y3)
 
 
-cleanedData = a.clean_data(x3, y3)
+cleanedData = test.clean_data(x3, y3)
 
 x3 = np.array(cleanedData['x'])
 y3 = np.array(cleanedData['y'])
 
-a.make_scatterplot(
+test.make_scatterplot(
     x3, y3,
     'X',
     'Y',
     'X Versus Y', 
-    pointSize=2,
-    pointColor='navy blue'
+    pointSize=3,
+    pointColor='black'
 )
 
 

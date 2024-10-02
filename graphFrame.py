@@ -573,7 +573,7 @@ class GraphFrame (tk.Canvas):
             #convert them all to numbers
             independant = np.array( list(float(value) for value in independant), dtype=float )
 
-            #align x and y into the datafram
+            #align x and y into the dataframe
             data = pd.DataFrame({'x': independant, 'y': dependant})
 
             #sort dataframe along x axis 
@@ -630,6 +630,8 @@ class GraphFrame (tk.Canvas):
         #if not treated as text, the point will be placed on the graph based on its x and y values
         #relative to the max and min values.
         if self.xHigh != None and self.xLow != None:
+
+            #go through each index in independant and dependant 
             for index in range(independant.size):
                 currentX, currentY = independant[index], dependant[index]
 
@@ -783,12 +785,13 @@ x3 = np.array(cleanedData['x'])
 y3 = np.array(cleanedData['y'])
 
 test.make_scatterplot(
-    x3, y3,
+    x, y,
     'X',
     'Y',
     'X Versus Y', 
     pointSize=3,
-    pointColor='black'
+    pointColor='black',
+    xAreDates=True
 )
 
 

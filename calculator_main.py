@@ -11,9 +11,7 @@ import sys
 
 sys.path.insert(1, '/Users/anayaahanotu/Documents/Coding/GitHub')
 
-from Special_tkinter_objects import tkinterPlus2 as tk2
 
-from graphFrame import *
 
 
 
@@ -61,9 +59,9 @@ class Budget_Calculator(tk.Frame):
 
         self.selectedColor.append(tk2._from_rgb(self.selectedColor[0]))
 
-        self.modes = ['income and expenses',
-                    'income and expenses analysis',
-                    'save for desires'
+        self.modes = ['income and savings',
+                    'expenses',
+                    'analysis'
                     ] #keep track of all possible modes
         
         self.mode = self.modes[0] #know what mode you are in
@@ -95,7 +93,7 @@ class Budget_Calculator(tk.Frame):
 
         #create a button have user select the income analysis section
 
-        self.analysisTab = tk.Label(tabFrame,
+        self.expensesTab = tk.Label(tabFrame,
                         text=self.modes[1],
                         font=('Georgia', 24,),
                         fg='white',
@@ -103,11 +101,11 @@ class Budget_Calculator(tk.Frame):
                         relief='groove'
                         )
         
-        self.analysisTab.bind('Button', lambda: self.set_mode(1)) #make it a working button
+        self.expensesTab.bind('Button', lambda: self.set_mode(1)) #make it a working button
         
         #use grid() to place the analysis tabs right next to each other with consistent space between the tabs easily
         
-        self.analysisTab.grid(row=0, column=1, padx=2)
+        self.expensesTab.grid(row=0, column=1, padx=2)
 
         #create a button have user select the budget for desires button section
 

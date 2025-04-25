@@ -165,7 +165,7 @@ class Budget_Calculator(tk.Frame):
         self.spendingsFrame = None
         self.investmentsFrame = None
 
-        self.set_mode(0) #set default mode
+        self.mode(0) #set default mode
         self.revive_data() # get data previously saved
 
         #we put this last to make sure users do not accidentally save unused data

@@ -1,12 +1,12 @@
 import tkinter as tk
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as mpl
 import sys
 import math
-sys.path.append( '/Users/anayaahanotu/Documents/Coding/GitHub/')
+sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from Special_tkinter_objects import tkinterPlus2 as tk2
-
 from other_python_docs import quick_math_operations as math2
 import datetime
 from datetime import datetime as dt 
@@ -15,7 +15,7 @@ root = tk.Tk()
 root['bg'] = 'white'
 
 
-class GraphFrame (tk.Canvas):
+class Graphing (tk.Canvas):
     '''Make a Frame to display the different graphs'''
     
     def __init__(self, master, kwargs={}):
@@ -52,128 +52,10 @@ class GraphFrame (tk.Canvas):
         
         pass
 
-    def create_line_axis(self, independant, dependant, xName='', yName='', title='', xAreDates=False, treatAsText =False, treatAsRange=False, timespan='1.W'):
-        '''
-        GraphFrame.create_line_axis(independant, dependant, ..., timespan = '1.W'): void
-        
-        independant: seq: x-axis values
-        dependant: numeric seq: y-axis values
-        xName: str: x-axis label
-        yName: str: y-axis label
-        title: str: title of graph
-        xAreDates: boolean: whether or not you want to look at the x axis data as a date
-        treatAsText: boolean: treat x data as text, not as dates or numeric
-        treatAsRange: boolean: treat x data as numeric
-        timespan: str: format: "<num units>.<units>"
-                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
-        '''
-
-        def treat_as_range(x):
-            """
-            treat_as_range(x, y)
-            x: numeric seq: data for independant variable
-            labels the x axis
-            treats x axis data as a range, and splits the range of the x axis into equal segments
-            used to make the scatterplot look cleaner
-            """
-            #make sure the data is in proper order
-
-            #everything i did to y i also do to x now
-            #set x range
-            xValues = x
-
-            #if there is a decimal range between the xvalues, convert the min and max values to integers
-            #convert min to integer using int() function
-            #convert max to intefer using math.ceil() function to ceiling the maximum
-            #an easier way to approach this would be to celieng the difference of the maximum and minimum
-            #may do the above
-
-            xValues = list(float(value) for value in xValues)
-
-            if (max(xValues) - min(xValues)) % 1 != 0:
-                xHigh = math.ceil(max(xValues))
-                xLow = math.floor(min(xValues))
-            else:
-                xHigh = max(xValues)
-                xLow = min(xValues)
-
-            #save the xHigh and the xLow to the class
-            self.xHigh, self.xLow = xHigh, xLow
-            
-            #try to find the cleanest split of the x values... goal is to have 10 increments
-            #first, find how many values go in between the highest and lowest values
-            xSplit = math2.factors(xHigh - xLow)
-
-            #now, just get all the values in order
-            xSplit = list(
-                factor[0] for factor in xSplit
-            )
-            # add distance each number is from 10 to the list
-            xSplit.extend(
-                list(
-                    abs(10-value) for value in xSplit
-                )
-            )
-
-            #xSplit is in two parts: the factors of the range of the x values and the distance of the factors from 10
-            #we look at the second half with the distance from ten -- index that value in the list
-            #the target xSplit will be halfway across the list, so the value indexed halfway across the list is our xSplit
-            xSplit = xSplit[
-                xSplit.index(
-                    min(
-                        xSplit[(len(xSplit)//2):]
-                    )
-                ) - (len(xSplit) // 2)
-            ]
-
-            #draw the lines
-            #should start at x = 100 and split evenly until it hits the length of the x axis (though shuold not be on the y axis)
-
-            divisionWidth = (length - 120)/xSplit
-
-
-            for x in range(xSplit + 1):
-                xPoint = 120 + divisionWidth * x
-
-                self.create_line(
-                    xPoint,
-                    height - 1,
-                    xPoint, 
-                    100,
-                    fill='light grey',
-                    width=1
-                )
-
-                self.create_text(
-                    xPoint,
-                    height + 10,
-                    fill='black',
-                    font=('Georgia', 10),
-                    text= int(xLow + x * ((xHigh - xLow)/xSplit)) # writing from left to right so its min + interval
-                )
-
-            
-
-            return yHigh, yLow, xHigh, xLow
-
-        def treat_as_text(x):
-            '''
-            treat_as_variables(x)
-            x: seq: values of the independant variables
-            creates an x axis and labels each value on the x axis
-            '''
-
-        def treat_as_dates(x, timespan):
-            '''
-            treat_as_dates(x, timespan)
-            x: seq or Strings: dates: format: mm/dd/yyyy
-            timespan: str: format: "<num units>.<units>"
-                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
-            '''
-    
-    def make_scatterplot(
-            self, independant, dependant, xName='', yName='', title='', xAreDates=False,
-            treatAsText =False, treatAsRange=False, timespan='1.W', pointSize=10, pointColor='black'
+    def make_scatterplot(self, independant, dependant, xName='', yName='',
+                          title='', xAreDates=False, treatAsText =False, 
+                          treatAsRange=False, timespan='1.W', pointSize=10,
+                          pointColor='black'
     ):
         '''
         GraphFrame.make_scaterplot(independant, dependant, ..., pointColor='black'): void
@@ -191,11 +73,15 @@ class GraphFrame (tk.Canvas):
             
         '''
        
-    def make_bar_graph(self):
+    def make_bar_graph(self, independant, dependant, xName="", yName="",
+                       title="", makeHistogram=False, fillColor="black"):
         pass
-    def make_line_chart(self):
+    def make_line_chart(self, independant, dependant, xName='', yName='',
+                          title='', xAreDates=False, treatAsText =False, 
+                          treatAsRange=False, timespan='1.W', pointSize=10,
+                          lineWidth=5, pointColor='black', lineColor="black"):
         pass
-    def make_pie_chart(self):
+    def make_pie_chart(self, independant, dependant, colorcode=[]):
         pass
     def convert_to_datetime(self, dates):
         '''
@@ -264,7 +150,7 @@ class GraphFrame (tk.Canvas):
 
 #### test  ####
 
-test = GraphFrame(
+test = Graphing(
     root,
     kwargs = {
         'width': 850,

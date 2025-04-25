@@ -11,9 +11,7 @@ import sys
 
 sys.path.insert(1, '/Users/anayaahanotu/Documents/Coding/GitHub')
 
-
-
-
+import Special_tkinter_objects.tkinterPlus2 as tk2
 
 root = tk.Tk()
 root.geometry('1200x800') #set size of window
@@ -37,11 +35,11 @@ class Budget_Calculator(tk.Frame):
 
         #title of project
         title = tk.Label( 
-        root,
-        bg=root['bg'],
-        fg='white',
-        text='Budget Calculator',
-        font=('Georgia', 26, 'bold'),
+            root,
+            bg=root['bg'],
+            fg='white',
+            text='Budget Calculator',
+            font=('Georgia', 26, 'bold'),
         )
 
         #set relative position of all the widgets, instead of a fixed position

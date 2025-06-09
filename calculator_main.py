@@ -15,7 +15,7 @@ import Special_tkinter_objects.tkinterPlus2 as tk2
 
 root = tk.Tk()
 root.geometry('1200x800') #set size of window
-root['bg'] = '#7BB4EE' #makes for a soft, neutral blue background
+root['bg'] = '#FDB0C0' #makes for a soft, neutral blue background
 root.title('Budget Calculator')
 
 
@@ -59,10 +59,11 @@ class Budget_Calculator(tk.Frame):
 
         self.modes = ['income and savings',
                     'expenses',
-                    'analysis'
+                    'analysis',
+                    'investments'
                     ] #keep track of all possible modes
         
-        self.mode = self.modes[0] #know what mode you are in
+        self.selectedMode = self.modes[0] #know what mode you are in
 
 
         #keep the tabs in a narrow frame about right next to each other
@@ -120,6 +121,22 @@ class Budget_Calculator(tk.Frame):
         
         self.budgetTab.grid(row=0, column=2, padx=2) #place it on the screen
 
+        #create a button have user select the budget for desires button section
+
+        self.investmentsTab = tk.Label(tabFrame, 
+                        text=self.modes[3],
+                        font=('Georgia', 24,),
+                        fg='white',
+                        bg=self.unselectedColor[1],
+                        relief='groove'
+                        )
+        
+         #make it a working button
+        self.investmentsTab.bind('<Button>', lambda: self.set_mode(3))
+        
+        self.investmentsTab.grid(row=0, column=3, padx=2) #place it on the screen
+
+
 
         #allow people to save their data
 
@@ -163,7 +180,8 @@ class Budget_Calculator(tk.Frame):
         self.spendingsFrame = None
         self.investmentsFrame = None
 
-        self.mode(0) #set default mode
+        self.CurrentModeIndex = 0 #set default mode
+        self.set_mode(0)
         self.revive_data() # get data previously saved
 
         #we put this last to make sure users do not accidentally save unused data

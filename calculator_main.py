@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 18 18:34:30 2023
 
-Makes the main calculator where all the parts come together and makes one calculator
+"""
+Anaya Ahanotu
+Created on Tue Jul 18 18:34:30 2023
+Brings all parts of calculator into one body.
+Also saves + retrieves data to & from the computer
 """
 #import needed modules
 import tkinter as tk

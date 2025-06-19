@@ -1,3 +1,12 @@
+"""
+Anaya Ahaontu
+18 June 2025
+Creates the graphs to display on the budget calculator
+"""
+
+
+
+
 import tkinter as tk
 import numpy as np
 import pandas as pd

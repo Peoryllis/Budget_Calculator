@@ -11,13 +11,14 @@ import pandas as pd
 import matplotlib.pyplot as mpl
 import sys
 import math
+import datetime
+from datetime import datetime as dt 
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
 from Special_tkinter_objects import tkinterPlus2 as tk2
 from other_python_docs import quick_math_operations as math2
-import datetime
-from datetime import datetime as dt 
+
 
 #just to test
 root = tk.Tk()

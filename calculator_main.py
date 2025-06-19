@@ -4,15 +4,19 @@ Created on Tue Jul 18 18:34:30 2023
 
 Makes the main calculator where all the parts come together and makes one calculator
 """
-
+#import needed modules
 import tkinter as tk
 import time
 import sys
 
-sys.path.insert(1, '/Users/anayaahanotu/Documents/Coding/GitHub')
+#import the different parts of the program
+import graphFrame
 
-import Special_tkinter_objects.tkinterPlus2 as tk2
+#import my special tkinter objects
+sys.path.append("/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/")
+import tkinterPlus2 as tk2
 
+#create the window
 root = tk.Tk()
 root.geometry('1200x800') #set size of window
 root['bg'] = '#FDB0C0' #makes for a soft, neutral blue background
@@ -139,7 +143,6 @@ class Budget_Calculator(tk.Frame):
 
 
         #allow people to save their data
-
         self.saveButton = tk.Label( 
             self,
             text='Save',

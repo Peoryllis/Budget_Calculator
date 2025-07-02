@@ -28,13 +28,15 @@ root['bg'] = 'white'
 class Graphing (tk.Canvas):
     '''Make a Frame to display the different graphs'''
     
-    def __init__(self, master, kwargs={}):
-        '''GraphFrame(args, kwargs):
-            master: Budget calculator
-            kwargs: dictionary: tkinter.Canvas parameters -- NOT 'bg'
+    def __init__(self, master, **kwargs):
+        '''GraphFrame(args, kwargs):\n
+            master: Tkinter.Frame() or Tkinter.Tk()\n
+            **kwargs: tkinter.Canvas parameters -- NOT 'bg'
         '''
-        
-        tk.Canvas.__init__(self, master, bg='white', **kwargs)
+
+        if "bg" in kwargs: del kwargs["bg"] #make sure bg is not added twice
+
+        tk.Canvas.__init__(self, master, bg='white', **kwargs) #initialize self
 
         #give the list of modes and set the mode
         self.charts = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
@@ -160,11 +162,10 @@ class Graphing (tk.Canvas):
 
 test = Graphing(
     root,
-    kwargs = {
-        'width': 850,
-        'height': 800
-    }
+    width = 850,
+    height = 800
 )
+
 test.pack(fill='both', expand=1)
 root.update()
 

@@ -2,7 +2,7 @@
 
 """
 Anaya Ahanotu
-Created on Tue Jul 18 18:34:30 2023
+Tue Jul 18 18:34:30 2023
 Brings all parts of calculator into one body.
 Also saves + retrieves data to & from the computer
 """

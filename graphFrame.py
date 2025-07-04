@@ -20,11 +20,6 @@ from Special_tkinter_objects import tkinterPlus2 as tk2
 from other_python_docs import quick_math_operations as math2
 
 
-#just to test
-root = tk.Tk()
-root['bg'] = 'white'
-
-
 class Graphing (tk.Canvas):
     '''Make a Frame to display the different graphs'''
     
@@ -159,65 +154,71 @@ class Graphing (tk.Canvas):
         return data.dropna()
 
 #### test  ####
+def main():
+    root = tk.Tk()
+    root['bg'] = 'white'
 
-test = Graphing(
-    root,
-    width = 850,
-    height = 800
-)
+    test = Graphing(
+        root,
+        width = 850,
+        height = 800
+    )
 
-test.pack(fill='both', expand=1)
-root.update()
+    test.pack(fill='both', expand=1)
+    root.update()
 
-x = np.array([
-    '2/24/2023',
-    '3/23/2021', 
-    '2/19/1996',
-    '2/17/2006',
-    '9/23/1992',
-    '2/9/1907',
-    '3/9/2007',
-    '2/8/2024',
-    '9/3/2001',
-    '2/3/2007'
-])
+    x = np.array([
+        '2/24/2023',
+        '3/23/2021', 
+        '2/19/1996',
+        '2/17/2006',
+        '9/23/1992',
+        '2/9/1907',
+        '3/9/2007',
+        '2/8/2024',
+        '9/3/2001',
+        '2/3/2007'
+    ])
 
-x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
+    x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
 
-y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
-y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
-
-
-x3 = np.array(list(((value / 1000) for value in range(-20000, 20000))))
-y3 = []
-
-y3 = list(x - math.sin(x) for x in x3)
-y3.extend(list(1 - x * math.cos(x) - math.sin(x) for x in x3))
+    y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
+    y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
 
 
-x3 = np.concatenate((x3, x3))
+    x3 = np.array(list(((value / 1000) for value in range(-20000, 20000))))
+    y3 = []
 
-y3 = np.array(y3)
-
-
-cleanedData = test.clean_data(x3, y3)
-
-x3 = np.array(cleanedData['x'])
-y3 = np.array(cleanedData['y'])
-
-x4=[2]
-y4=[5]
-
-test.make_scatterplot(
-    x4, y4,
-    'X',
-    'Y',
-    'X Versus Y', 
-    pointSize=3,
-    pointColor='black',
-    treatAsRange=True
-)
+    y3 = list(x - math.sin(x) for x in x3)
+    y3.extend(list(1 - x * math.cos(x) - math.sin(x) for x in x3))
 
 
+    x3 = np.concatenate((x3, x3))
 
-root.mainloop()
+    y3 = np.array(y3)
+
+
+    cleanedData = test.clean_data(x3, y3)
+
+    x3 = np.array(cleanedData['x'])
+    y3 = np.array(cleanedData['y'])
+
+    x4=[2]
+    y4=[5]
+
+    test.make_scatterplot(
+        x4, y4,
+        'X',
+        'Y',
+        'X Versus Y', 
+        pointSize=3,
+        pointColor='black',
+        treatAsRange=True
+    )
+
+
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()

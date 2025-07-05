@@ -6,18 +6,14 @@ Creates the graphs to display on the budget calculator
 
 #import needed modules
 import tkinter as tk
-from PIL import ImageTk, Image
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import sys
-import os
 import math
 import datetime
 from datetime import datetime as dt 
-import io
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
@@ -44,13 +40,12 @@ class Graphing (tk.Frame):
 
         self.xData = []
         self.yData = []
-        self.xName = ""
-        self.yName = ""
-        self.title = ""
+        self.graphAtts={}
 
         self.bind("<Configure>", 
-                       lambda e: self.create_graph(self.xData, self.yData),
+                       lambda e: self.create_graph(self.xData, self.yData, e=e),
                        "+")
+        
     
     def switch_graph(self, graphType, **kwargs):
         '''GraphFrame.switch_graph(graphType)
@@ -60,7 +55,7 @@ class Graphing (tk.Frame):
         
         pass
     
-    def create_graph(self, independant=[], dependant=[], **kwargs):
+    def create_graph(self, independant=[], dependant=[], e = None, **kwargs):
         '''GraphFrame.create_graph(graphType)
         independant: seq: x-axis values
         dependant: seq: numeric: y-axis values
@@ -71,13 +66,24 @@ class Graphing (tk.Frame):
 
         #test run
         self.make_scatterplot(independant=independant,
-                              dependant=dependant,
+                              dependant=dependant, e=e,
                               **kwargs)
-    
+        
+    def align_params(self, funcParams):
+        """
+        GraphFrame.align_params(self, selfParams, funcParams)
+        funcParams: dict: parameters and corresponding values for the function
+        updates self.params based on function params
+        """
 
+        #only update atts if chart is not being made due to
+        #self configuration
+        if funcParams["e"] == None:
+            self.graphAtts = funcParams
+            
     def make_scatterplot(self, independant, dependant,*, xName='', yName='',
                           title='', xAreDates=False, treatAsText =False, timespan='1.W', pointSize=10,
-                          pointColor='black'):
+                          pointColor='black', e=None):
         '''
         GraphFrame.make_scaterplot(independant, dependant, *, ...): void\n
         independant: seq: x-axis values\n
@@ -91,6 +97,7 @@ class Graphing (tk.Frame):
             units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)\n
         pointSize: int or float: size of the point wanted (default: 10)\n
         pointColor: str: color of point wanted (default: 'black')\n
+        calledbySelf: bool: DO NOT CHANGE VALUE. Reserved for the class only.
             
         '''
 
@@ -103,10 +110,8 @@ class Graphing (tk.Frame):
         self.xData = cleanedData.loc[:, "x"]
         self.yData = cleanedData.loc[:, "y"]
 
-        #store the title labels
-
-
-        
+        #store every important label
+        self.align_params(locals())
 
         #if the data is text: convert to string
         if treatAsText:
@@ -125,21 +130,28 @@ class Graphing (tk.Frame):
         avgLen = (plotWidth + plotHeight)/2
 
         #create the plot
-        self.fig, self.ax = plt.subplots(figsize=(plotWidth//115, plotHeight//110), 
-                                         dpi=avgLen/10)
+        self.fig, self.ax = plt.subplots(figsize=(plotWidth//120, plotHeight//110), 
+                                         dpi=avgLen/12)
         #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
 
-        #graph the scatter plot
-        self.ax.scatter(self.xData, self.yData, s=pointSize, c=pointColor)
-        self.ax.title.set_text(self.title)
-        self.ax.set_xlabel(self.xName)
-        self.ax.set_ylabel(self.yName)
 
-        #save the scatterplot on the frame
-        self.graph = FigureCanvasTkAgg(self.fig, master=self)
-        chart = self.graph.get_tk_widget()
-        chart.configure(width=plotWidth, height=plotHeight)
-        chart.pack()
+        #make sure reference dict is not empty
+        if self.graphAtts != {}:
+            #graph the scatter plot
+            self.ax.scatter(self.xData,
+                            self.yData,
+                            s=self.graphAtts["pointSize"],
+                            c=self.graphAtts["pointColor"])
+            
+            self.ax.title.set_text(self.graphAtts["title"])
+            self.ax.set_xlabel(self.graphAtts["xName"])
+            self.ax.set_ylabel(self.graphAtts["yName"])
+
+            #save the scatterplot on the frame
+            self.graph = FigureCanvasTkAgg(self.fig, master=self)
+            chart = self.graph.get_tk_widget()
+            chart.configure(width=plotWidth, height=plotHeight)
+            chart.pack()
 
     def make_bar_graph(self, independant, dependant, xName="", yName="",
                        title="", makeHistogram=False, fillColor="black"):
@@ -188,19 +200,14 @@ class Graphing (tk.Frame):
 
         return tempIndependant
 
-    def show_info(self, data):
-
-        # create an info bar on the point's 
-        self.infoBar = self.create_text(
-            self.winfo_width()/2,
-            self.winfo_height() - 30,
-            text=data,
-            font=('Georgia', 15),
-            fill='black'
-        )
-
-    def hide_info(self):
-        self.delete(self.infoBar)
+    def close(self):
+        """
+        self.close(self)
+        closes the window
+        """
+        #close the plot
+        plt.close()
+        self.destroy()
 
     def clean_data(self, independant, dependant):
         '''
@@ -228,7 +235,7 @@ def main():
     test.pack(fill='both', expand=1)
     root.update()
 
-    x = np.arange(-10, 10, step=.01)
+    x = np.arange(-10, 10, step=0.01)
     y = []
     
     for a in x:

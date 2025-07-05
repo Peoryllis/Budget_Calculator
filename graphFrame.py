@@ -6,13 +6,18 @@ Creates the graphs to display on the budget calculator
 
 #import needed modules
 import tkinter as tk
+from PIL import ImageTk, Image
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as mpl
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import sys
+import os
 import math
 import datetime
 from datetime import datetime as dt 
+import io
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
@@ -20,7 +25,7 @@ from Special_tkinter_objects import tkinterPlus2 as tk2
 from other_python_docs import quick_math_operations as math2
 
 
-class Graphing (tk.Canvas):
+class Graphing (tk.Frame):
     '''Make a Frame to display the different graphs'''
     
     def __init__(self, master, **kwargs):
@@ -37,13 +42,17 @@ class Graphing (tk.Canvas):
         self.charts = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
         self.type = self.charts[0]
 
-        #keep track of the lowest and highest x and y values plotted
-        self.xLow = None
-        self.xHigh = None
-        self.yLow = None
-        self.yHigh = None
+        self.xData = []
+        self.yData = []
+        self.xName = ""
+        self.yName = ""
+        self.title = ""
+
+        self.bind("<Configure>", 
+                       lambda e: self.create_graph(self.xData, self.yData),
+                       "+")
     
-    def switch_graph(self, graphType):
+    def switch_graph(self, graphType, **kwargs):
         '''GraphFrame.switch_graph(graphType)
         graphType: any literal in [timeline chart, bar chart, or pie chart]
         switches the graph to be displayed
@@ -51,35 +60,87 @@ class Graphing (tk.Canvas):
         
         pass
     
-    def create_graph(self, independant, dependant):
+    def create_graph(self, independant=[], dependant=[], **kwargs):
         '''GraphFrame.create_graph(graphType)
         independant: seq: x-axis values
         dependant: seq: numeric: y-axis values
         '''
-        
-        pass
+        #make sure we don't end up with multiple charts in one frame
+        for widget in self.winfo_children(): 
+            widget.destroy()
 
-    def make_scatterplot(self, independant, dependant, xName='', yName='',
-                          title='', xAreDates=False, treatAsText =False, 
-                          treatAsRange=False, timespan='1.W', pointSize=10,
-                          pointColor='black'
-    ):
+        #test run
+        self.make_scatterplot(independant=independant,
+                              dependant=dependant,
+                              **kwargs)
+    
+
+    def make_scatterplot(self, independant, dependant,*, xName='', yName='',
+                          title='', xAreDates=False, treatAsText =False, timespan='1.W', pointSize=10,
+                          pointColor='black'):
         '''
-        GraphFrame.make_scaterplot(independant, dependant, ..., pointColor='black'): void
-        independant: seq: x-axis values
-        dependant: numeric seq: y-axis values
-        xName: str: x-axis label
-        yName: str: y-axis label
-        title: str: title of graph
-        xAreDates: boolean: whether or not you want to look at the x axis data as a date
-        treatAsText: boolean: treat all data as text, not as dates
-        timespan: str: format: "<num units>.<units>"
-                units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)
-        pointSize: int or float: size of the point wanted (default: 10)
-        pointColor: str: color of point wanted (default: 'black')
+        GraphFrame.make_scaterplot(independant, dependant, *, ...): void\n
+        independant: seq: x-axis values\n
+        dependant: numeric seq: y-axis values\n
+        xName: str: x-axis label\n
+        yName: str: y-axis label\n
+        title: str: title of graph\n
+        xAreDates: bool: look at the x axis data as a date: False\n
+        treatAsText: boolean: treat all data as text, not as dates: False\n
+        timespan: str: format: "<num units>.<units>": 1.w\n
+            units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)\n
+        pointSize: int or float: size of the point wanted (default: 10)\n
+        pointColor: str: color of point wanted (default: 'black')\n
             
         '''
-       
+
+
+        #remove rows with no values
+        cleanedData = self.clean_data(independant, dependant)
+
+
+        # separate the independant and dependant variables
+        self.xData = cleanedData.loc[:, "x"]
+        self.yData = cleanedData.loc[:, "y"]
+
+        #store the title labels
+
+
+        
+
+        #if the data is text: convert to string
+        if treatAsText:
+            self.xData = self.xData.astype(str)
+        #else if the data are dates, convert to datetime
+        elif xAreDates:
+            self.xData = self.convert_to_datetime(self.xData)
+
+
+        self.update_idletasks()
+        self.master.update_idletasks()
+
+        plotWidth = self.winfo_width()
+        plotHeight = self.winfo_height()
+
+        avgLen = (plotWidth + plotHeight)/2
+
+        #create the plot
+        self.fig, self.ax = plt.subplots(figsize=(plotWidth//115, plotHeight//110), 
+                                         dpi=avgLen/10)
+        #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+
+        #graph the scatter plot
+        self.ax.scatter(self.xData, self.yData, s=pointSize, c=pointColor)
+        self.ax.title.set_text(self.title)
+        self.ax.set_xlabel(self.xName)
+        self.ax.set_ylabel(self.yName)
+
+        #save the scatterplot on the frame
+        self.graph = FigureCanvasTkAgg(self.fig, master=self)
+        chart = self.graph.get_tk_widget()
+        chart.configure(width=plotWidth, height=plotHeight)
+        chart.pack()
+
     def make_bar_graph(self, independant, dependant, xName="", yName="",
                        title="", makeHistogram=False, fillColor="black"):
         pass
@@ -90,14 +151,15 @@ class Graphing (tk.Canvas):
         pass
     def make_pie_chart(self, independant, dependant, colorcode=[]):
         pass
+         
     def convert_to_datetime(self, dates):
         '''
-        GraphFrame.convert_to_datetime(dates)
-        dates: seq: str: valid dates separated by '/'
-            dates must be in month/day/YYYY format
-            Warning: if not in YYYY format, your dates may be off
-        converts all the dates in the sequence to datetime format
-        returns list: datetime.dates
+        GraphFrame.convert_to_datetime(dates)\n
+        dates: seq: str: valid dates separated by '/'\n
+            dates must be in month/day/YYYY format\n
+            Warning: if not in YYYY format, your dates may be off\n
+        converts all the dates in the sequence to datetime format\n
+        returns list: datetime.dates\n
         '''
         #store the dates in a new format and save it to variable
         tempIndependant = []
@@ -148,7 +210,6 @@ class Graphing (tk.Canvas):
         cleans the data by filtering out None types and null
         returns DataFrame: {'x': independant, 'y': dependant}
         '''
-
         data = pd.DataFrame({'x': independant, 'y': dependant})
 
         return data.dropna()
@@ -160,60 +221,49 @@ def main():
 
     test = Graphing(
         root,
-        width = 850,
-        height = 800
+        width = 400,
+        height = 400
     )
 
     test.pack(fill='both', expand=1)
     root.update()
 
-    x = np.array([
-        '2/24/2023',
-        '3/23/2021', 
-        '2/19/1996',
-        '2/17/2006',
-        '9/23/1992',
-        '2/9/1907',
-        '3/9/2007',
-        '2/8/2024',
-        '9/3/2001',
-        '2/3/2007'
-    ])
+    x = np.arange(-10, 10, step=.01)
+    y = []
+    
+    for a in x:
+        try:
+            newValue = math.sin(a) + math.sin(2*a)/2 + math.sin(3*a)/3 
+        except:
+            newValue = None
+        finally:
+            y.append(newValue)
 
-    x2 = np.array ([51, 85, 90, 93, -62, -25, 30, 75, 32, 53, 35])
+    y = np.array(y)
 
-    y = np.array([-7532, 8493, -1254, 6789, -4321, 9876, -2109, 5634, -8765, 4320])
-    y2 = np.array([32, 93, -94, -33, 93, -29, -93, 49, 23, 94, 23])
+    indexToDelete = []
+    for i in range(len(y)):
+        if (y[i] > 15) or (y[i] < -15):
+            indexToDelete.append(i)
 
-
-    x3 = np.array(list(((value / 1000) for value in range(-20000, 20000))))
-    y3 = []
-
-    y3 = list(x - math.sin(x) for x in x3)
-    y3.extend(list(1 - x * math.cos(x) - math.sin(x) for x in x3))
+    y = np.delete(y, indexToDelete)
+    x = np.delete(x, indexToDelete)
 
 
-    x3 = np.concatenate((x3, x3))
+    y2 = [datetime.date(year=2024, month=3, day=4)]
+    add = datetime.timedelta(days=1)
 
-    y3 = np.array(y3)
+    for value in range(len(x)):
+        pass
 
 
-    cleanedData = test.clean_data(x3, y3)
-
-    x3 = np.array(cleanedData['x'])
-    y3 = np.array(cleanedData['y'])
-
-    x4=[2]
-    y4=[5]
-
-    test.make_scatterplot(
-        x4, y4,
-        'X',
-        'Y',
-        'X Versus Y', 
+    test.create_graph(
+        x, y,
+        xName='X',
+        yName='Y',
+        title='X Versus Y', 
         pointSize=3,
         pointColor='black',
-        treatAsRange=True
     )
 
 

@@ -122,12 +122,12 @@ class Graphing (tk.Frame):
 
 
         #make sure reference dict is not empty
+        #if it is, then it means the window just opened without any data
         if self.graphAtts != {}:
             #reset the plot if a chart has already been initialized
             if not hasattr(self, "fig") or self.fig is None:
                 #initialize the figure
-                self.fig = plt.figure(figsize=(plotWidth//120, plotHeight//110), 
-                                         dpi=dpiRef/8)
+                self.fig = plt.figure()
                 #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
             if hasattr(self, "ax"):
                 del self.ax
@@ -148,6 +148,7 @@ class Graphing (tk.Frame):
                 self.xData = self.xData.astype(str)
             #else if the data are dates, convert to datetime
             elif self.graphAtts["xAreDates"]:
+                #convert all days to datetime to work with them easier
                 self.xData = self.convert_to_datetime(self.xData)
 
             #graph the scatter plot
@@ -156,7 +157,7 @@ class Graphing (tk.Frame):
                             s=self.graphAtts["pointSize"],
                             c=self.graphAtts["pointColor"])
             
-            #set axis
+            #set axis labels
             self.ax.title.set_text(self.graphAtts["title"])
             self.ax.set_xlabel(self.graphAtts["xName"])
             self.ax.set_ylabel(self.graphAtts["yName"])
@@ -263,7 +264,8 @@ def main():
     
     for a in x:
         try:
-            newValue = math.asin(math.tanh(a))
+            newValue = a / (1 + a**2)**2
+
 
         except:
             newValue = None

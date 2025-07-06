@@ -24,7 +24,7 @@ from other_python_docs import quick_math_operations as math2
 class Graphing (tk.Frame):
     '''Make a Frame to display the different graphs'''
     
-    def __init__(self, master, **kwargs):
+    def __init__(self, master:tk.Frame|tk.Tk, **kwargs):
         '''GraphFrame(args, kwargs):\n
             master: Tkinter.Frame() or Tkinter.Tk()\n
             **kwargs: tkinter.Canvas parameters -- NOT 'bg'
@@ -63,17 +63,17 @@ class Graphing (tk.Frame):
         #make sure we don't end up with multiple charts in one frame
         for widget in self.winfo_children(): 
             widget.destroy()
-
+        
         #test run
         self.make_scatterplot(independant=independant,
                               dependant=dependant, e=e,
                               **kwargs)
         
-    def align_params(self, funcParams):
+    def align_params(self, funcParams: dict):
         """
-        GraphFrame.align_params(self, selfParams, funcParams)
-        funcParams: dict: parameters and corresponding values for the function
-        updates self.params based on function params
+        GraphFrame.align_params(self, selfParams, funcParams)\n
+        funcParams: dict: parameters and corresponding values for the function\n
+        updates self.params based on function params\n
         """
 
         #only update atts if chart is not being made due to
@@ -97,8 +97,7 @@ class Graphing (tk.Frame):
             units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)\n
         pointSize: int or float: size of the point wanted (default: 10)\n
         pointColor: str: color of point wanted (default: 'black')\n
-        calledbySelf: bool: DO NOT CHANGE VALUE. Reserved for the class only.
-            
+        e: event handler: DO NOT CHANGE THIS VALUE
         '''
 
 
@@ -113,39 +112,40 @@ class Graphing (tk.Frame):
         #store every important label
         self.align_params(locals())
 
-        #if the data is text: convert to string
-        if treatAsText:
-            self.xData = self.xData.astype(str)
-        #else if the data are dates, convert to datetime
-        elif xAreDates:
-            self.xData = self.convert_to_datetime(self.xData)
-
-
         self.update_idletasks()
         self.master.update_idletasks()
 
+        #store the length, width, and average of the two on the plot
         plotWidth = self.winfo_width()
         plotHeight = self.winfo_height()
-
-        avgLen = (plotWidth + plotHeight)/2
-
-        #create the plot
-        self.fig, self.ax = plt.subplots(figsize=(plotWidth//120, plotHeight//110), 
-                                         dpi=avgLen/12)
-        #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+        dpiRef = min(plotHeight, plotWidth)
 
 
         #make sure reference dict is not empty
         if self.graphAtts != {}:
+            #create the plot
+
+            self.fig, ax = plt.subplots(figsize=(plotWidth//120, plotHeight//110), 
+                                         dpi=dpiRef/12)
+            #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+
+            #if the data is text: convert to string
+            if self.graphAtts["treatAsText"]:
+                self.xData = self.xData.astype(str)
+            #else if the data are dates, convert to datetime
+            elif self.graphAtts["xAreDates"]:
+                self.xData = self.convert_to_datetime(self.xData)
+
             #graph the scatter plot
-            self.ax.scatter(self.xData,
+            ax.scatter(self.xData,
                             self.yData,
                             s=self.graphAtts["pointSize"],
                             c=self.graphAtts["pointColor"])
             
-            self.ax.title.set_text(self.graphAtts["title"])
-            self.ax.set_xlabel(self.graphAtts["xName"])
-            self.ax.set_ylabel(self.graphAtts["yName"])
+            #set axis
+            ax.title.set_text(self.graphAtts["title"])
+            ax.set_xlabel(self.graphAtts["xName"])
+            ax.set_ylabel(self.graphAtts["yName"])
 
             #save the scatterplot on the frame
             self.graph = FigureCanvasTkAgg(self.fig, master=self)
@@ -164,7 +164,7 @@ class Graphing (tk.Frame):
     def make_pie_chart(self, independant, dependant, colorcode=[]):
         pass
          
-    def convert_to_datetime(self, dates):
+    def convert_to_datetime(self, dates) -> list[datetime.date]:
         '''
         GraphFrame.convert_to_datetime(dates)\n
         dates: seq: str: valid dates separated by '/'\n
@@ -202,20 +202,22 @@ class Graphing (tk.Frame):
 
     def close(self):
         """
-        self.close(self)
+        self.close(self)\n
         closes the window
         """
         #close the plot
         plt.close()
+
+        #destory the frame
         self.destroy()
 
-    def clean_data(self, independant, dependant):
+    def clean_data(self, independant, dependant) -> pd.DataFrame:
         '''
-        GraphFrame.clean_data(independant, dependant)
-        independant: seq: x-axis values
-        dependant: seq: y-axis values
-        cleans the data by filtering out None types and null
-        returns DataFrame: {'x': independant, 'y': dependant}
+        GraphFrame.clean_data(independant, dependant)\n
+        independant: seq: x-axis values\n
+        dependant: seq: y-axis values\n
+        cleans the data by filtering out None types and null\n
+        returns DataFrame: {'x': independant, 'y': dependant}\n
         '''
         data = pd.DataFrame({'x': independant, 'y': dependant})
 
@@ -272,7 +274,6 @@ def main():
         pointSize=3,
         pointColor='black',
     )
-
 
 
     root.mainloop()

@@ -123,10 +123,24 @@ class Graphing (tk.Frame):
 
         #make sure reference dict is not empty
         if self.graphAtts != {}:
-            #create the plot
+            #reset the plot if a chart has already been initialized
+            if not hasattr(self, "fig") or self.fig is None:
+                #initialize the figure
+                self.fig = plt.figure(figsize=(plotWidth//120, plotHeight//110), 
+                                         dpi=dpiRef/8)
+                #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+            if hasattr(self, "ax"):
+                del self.ax
 
-            self.fig, ax = plt.subplots(figsize=(plotWidth//120, plotHeight//110), 
-                                         dpi=dpiRef/12)
+            # clear the figure and create a new axis
+            self.fig.clear()
+
+            #create the axis where the chart will be made
+            self.ax = self.fig.add_subplot(111)
+
+            #resize fig
+            self.fig.set_size_inches(plotWidth//120, plotHeight//110)
+            self.fig.set_dpi(dpiRef/8)
             #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
 
             #if the data is text: convert to string
@@ -137,21 +151,28 @@ class Graphing (tk.Frame):
                 self.xData = self.convert_to_datetime(self.xData)
 
             #graph the scatter plot
-            ax.scatter(self.xData,
+            self.ax.scatter(self.xData,
                             self.yData,
                             s=self.graphAtts["pointSize"],
                             c=self.graphAtts["pointColor"])
             
             #set axis
-            ax.title.set_text(self.graphAtts["title"])
-            ax.set_xlabel(self.graphAtts["xName"])
-            ax.set_ylabel(self.graphAtts["yName"])
+            self.ax.title.set_text(self.graphAtts["title"])
+            self.ax.set_xlabel(self.graphAtts["xName"])
+            self.ax.set_ylabel(self.graphAtts["yName"])
 
             #save the scatterplot on the frame
-            self.graph = FigureCanvasTkAgg(self.fig, master=self)
+            self.graph = FigureCanvasTkAgg(self.fig, self)
             chart = self.graph.get_tk_widget()
             chart.configure(width=plotWidth, height=plotHeight)
             chart.pack()
+            
+            #draw the chart
+            self.graph.draw()
+
+            #update the window
+            self.update_idletasks()
+            self.master.update_idletasks()
 
     def make_bar_graph(self, independant, dependant, xName="", yName="",
                        title="", makeHistogram=False, fillColor="black"):
@@ -206,7 +227,7 @@ class Graphing (tk.Frame):
         closes the window
         """
         #close the plot
-        plt.close()
+        plt.close("all")
 
         #destory the frame
         self.destroy()
@@ -242,7 +263,8 @@ def main():
     
     for a in x:
         try:
-            newValue = math.sin(a) + math.sin(2*a)/2 + math.sin(3*a)/3 
+            newValue = math.asin(math.tanh(a))
+
         except:
             newValue = None
         finally:
@@ -252,8 +274,9 @@ def main():
 
     indexToDelete = []
     for i in range(len(y)):
-        if (y[i] > 15) or (y[i] < -15):
-            indexToDelete.append(i)
+        if y[i] != None:
+            if (y[i] > 50) or (y[i] < -50):
+                indexToDelete.append(i)
 
     y = np.delete(y, indexToDelete)
     x = np.delete(x, indexToDelete)

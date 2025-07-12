@@ -49,18 +49,22 @@ class Graphing (tk.Frame):
         self.bind("<Configure>", 
                     lambda e: self.create_graph(e=e), 
                     "+")
-        
-        #put in key valyes to self.graphAtts
-        #so program can start up properly
-        self.set_attributes()
-            
-    def switch_graph(self, graphType:int, **kwargs) -> None:
-        '''GraphFrame.switch_graph(graphType)
-        graphType: any literal in [timeline chart, bar chart, or pie chart]
+
+    def switch_graph(self, graphType:int) -> None:
+        '''GraphFrame.switch_graph(graphType)\n
+        graphType: int: numeric representation of graph to be shown\n
+            0: Bar Chart\n
+            1: Line plot\n
+            2: Scatter Plot\n
+            3: Pie Chart\n
         switches the graph to be displayed
         '''
-        
-        pass
+
+        #update graph mode
+        self.type = self.charts[graphType]
+
+        #draw the graph
+        self.create_graph()
     
     def set_attributes(self, independant= [], dependant=[], *, xName: str='', yName: str='', title: str='',
                        xAreDates: bool=False, treatAsText:bool=False,
@@ -95,7 +99,7 @@ class Graphing (tk.Frame):
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
-    def create_graph(self, e = None) -> None:
+    def create_graph(self, e=None) -> None:
         '''GraphFrame.create_graph(graphType)\n
         independant: seq: x-axis values\n
         dependant: seq: numeric: y-axis values\n
@@ -106,18 +110,18 @@ class Graphing (tk.Frame):
             widget.destroy()
         
         #test run
-        self.__make_scatterplot(e=e)
-        
+        self.__make_scatterplot(e=e)     
     
-    def __reset_plot(self, plotWidth: float|int, plotHeight: float|int,
-                     dpiRef:float|int) -> None:
+    def __reset_plot(self) -> None:
         """
         Graph.__reset_plot(self, plotWidth, plotHeight, dpiRef) -> None
-        plotWidth: float|int: width of the window
-        plotHeight: float|int: height of the window
-        dpiRef: float|int: minimum of plotWidth and plotHeight
         Resets the fig and axis
         """
+
+        #store the length, width, and average of the two on the plot
+        plotWidth = self.winfo_width()
+        plotHeight = self.winfo_height()
+        dpiRef = min(plotHeight, plotWidth)
 
         #reset the plot if a chart has already been initialized
         if not hasattr(self, "fig") or self.fig is None:
@@ -143,7 +147,6 @@ class Graphing (tk.Frame):
         chart = self.graph.get_tk_widget()
         chart.configure(width=plotWidth, height=plotHeight)
         chart.pack()
-
             
     def __make_scatterplot(self, e=None) -> None:
         '''
@@ -164,11 +167,6 @@ class Graphing (tk.Frame):
         self.update_idletasks()
         self.master.update_idletasks()
 
-        #store the length, width, and average of the two on the plot
-        plotWidth = self.winfo_width()
-        plotHeight = self.winfo_height()
-        dpiRef = min(plotHeight, plotWidth)
-
         #make sure reference dict is not empty
         #if it is, then it means the window just opened without any data
         if self.graphAtts != {}:
@@ -187,7 +185,7 @@ class Graphing (tk.Frame):
 
             #reset the matplotlib plot -- remove current one from memory
             #create new blank slate
-            self.__reset_plot(plotWidth, plotHeight, dpiRef)
+            self.__reset_plot()
 
             #reduce clutter of x axis
             self.fig.autofmt_xdate()
@@ -211,15 +209,13 @@ class Graphing (tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, independant, dependant, *, xName="", yName="",
-                       title="", makeHistogram=False, fillColor="black"):
+    def __make_bar_graph(self, e=None):
         pass
-    def __make_line_chart(self, independant, dependant, *,xName='', yName='',
-                          title='', xAreDates=False, treatAsText =False, 
-                          treatAsRange=False, timespan='1.W', pointSize=10,
-                          lineWidth=5, pointColor='black', lineColor="black"):
+
+    def __make_line_chart(self, e=None):
         pass
-    def __make_pie_chart(self, independant, dependant, *, colorcode=[]):
+
+    def __make_pie_chart(self, e=None):
         pass
 
     def __filter_dates(self):
@@ -323,7 +319,7 @@ class Graphing (tk.Frame):
 
         return tempIndependant
 
-    def close(self):
+    def close(self) -> None:
         """
         self.close(self)\n
         closes the window
@@ -345,6 +341,7 @@ class Graphing (tk.Frame):
         data = pd.DataFrame({'x': independant, 'y': dependant})
 
         return data.dropna()
+
 
 #### test  ####
 def main():
@@ -406,11 +403,11 @@ def main():
     
 
 
-    test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black', xAreDates=True,
-                        timespan="6.M")
+    test.set_attributes(x, y, xName='X', yName='Y', title='X Versus Y', 
+                        pointSize=3, pointColor='black', treatAsText=False)
 
     test.create_graph()
+
 
     root.mainloop()
 

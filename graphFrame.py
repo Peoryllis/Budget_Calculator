@@ -54,7 +54,7 @@ class Graphing (tk.Frame):
         #so program can start up properly
         self.set_attributes()
             
-    def switch_graph(self, graphType, **kwargs):
+    def switch_graph(self, graphType:int, **kwargs) -> None:
         '''GraphFrame.switch_graph(graphType)
         graphType: any literal in [timeline chart, bar chart, or pie chart]
         switches the graph to be displayed
@@ -67,7 +67,7 @@ class Graphing (tk.Frame):
                        timespan:str='1.W', pointSize:int=10,
                        pointColor:str='black', makeHistogram:bool=False,
                        fillColor:str="black", lineWidth:int=5,
-                       lineColor:str="black", colorcode=[]):
+                       lineColor:str="black", colorcode=[]) -> None:
         
         """
         GraphFrame.set_attributes(): sets up the attributes for the chart
@@ -95,7 +95,7 @@ class Graphing (tk.Frame):
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
-    def create_graph(self, e = None):
+    def create_graph(self, e = None) -> None:
         '''GraphFrame.create_graph(graphType)\n
         independant: seq: x-axis values\n
         dependant: seq: numeric: y-axis values\n
@@ -145,7 +145,7 @@ class Graphing (tk.Frame):
         chart.pack()
 
             
-    def __make_scatterplot(self, e=None):
+    def __make_scatterplot(self, e=None) -> None:
         '''
         GraphFrame.make_scaterplot(self, e): void\n
         e: event handler: DO NOT CHANGE THIS VALUE

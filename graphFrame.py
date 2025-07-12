@@ -35,6 +35,8 @@ class Graphing (tk.Frame):
         tk.Canvas.__init__(self, master, bg='white', **kwargs) #initialize self
 
         #give the list of modes and set the mode
+        #these are meant to be private atts 
+        #but would have to change a whole bunch of code to update
         self.charts = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
         self.type = self.charts[0]
 
@@ -43,10 +45,11 @@ class Graphing (tk.Frame):
         self.graphAtts={}
 
         self.bind("<Configure>", 
-                       lambda e: self.create_graph(self.xData, self.yData, e=e),
-                       "+")
+                    lambda e: self.create_graph(e=e), 
+                    "+")
         
-    
+        self.set_attributes()
+            
     def switch_graph(self, graphType, **kwargs):
         '''GraphFrame.switch_graph(graphType)
         graphType: any literal in [timeline chart, bar chart, or pie chart]
@@ -55,31 +58,52 @@ class Graphing (tk.Frame):
         
         pass
     
-    def create_graph(self, independant=[], dependant=[], e = None, **kwargs):
-        '''GraphFrame.create_graph(graphType)
-        independant: seq: x-axis values
-        dependant: seq: numeric: y-axis values
+    def set_attributes(self, independant= [], dependant=[], *, xName: str='', yName: str='', title: str='',
+                       xAreDates: bool=False, treatAsText:bool=False,
+                       timespan:str='1.W', pointSize:int=10,
+                       pointColor:str='black', makeHistogram:bool=False,
+                       fillColor:str="black", lineWidth:int=5,
+                       lineColor:str="black", colorcode=[]):
+        
+        """
+        GraphFrame.set_attributes(): sets up the attributes for the chart
+        independant: iterable: list of all x values
+        dependent: iterable: list of all y values
+
+        Used with all charts: xName, yName, title
+
+        Unique to scatterplot: xAreDates, treatAsText, timespan, pointSize,
+        pointColor
+
+        Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
+        pointColor, lineWidth, lineColor
+
+        unique to bar chart: xAreDates, makeHistorgram, fillColor
+
+        unique to pie chart: 
+            - colorcode: iterable: list: list of colors to be used
+        """
+        # set self.xValues and self.yValues to passed independant and dependant values
+        self.xData, self.yData = independant, dependant
+
+        #update self.graphAtts except the first two items
+        self.graphAtts = locals()
+        del self.graphAtts["independant"]
+        del self.graphAtts["dependant"]
+
+    def create_graph(self, e = None):
+        '''GraphFrame.create_graph(graphType)\n
+        independant: seq: x-axis values\n
+        dependant: seq: numeric: y-axis values\n
         '''
+
         #make sure we don't end up with multiple charts in one frame
         for widget in self.winfo_children(): 
             widget.destroy()
         
         #test run
-        self.__make_scatterplot(independant=independant,
-                              dependant=dependant, e=e,
-                              **kwargs)
+        self.__make_scatterplot(e=e)
         
-    def __align_params(self, funcParams: dict):
-        """
-        GraphFrame.align_params(self, selfParams, funcParams)\n
-        funcParams: dict: parameters and corresponding values for the function\n
-        updates self.params based on function params\n
-        """
-
-        #only update atts if chart is not being made due to
-        #self configuration
-        if funcParams["e"] == None:
-            self.graphAtts = funcParams
     
     def __reset_plot(self, plotWidth: float|int, plotHeight: float|int,
                      dpiRef:float|int) -> None:
@@ -117,35 +141,21 @@ class Graphing (tk.Frame):
         chart.pack()
 
             
-    def __make_scatterplot(self, independant, dependant,*, xName='', yName='',
-                          title='', xAreDates=False, treatAsText =False, timespan='1.W', pointSize=10,
-                          pointColor='black', e=None):
+    def __make_scatterplot(self, e=None):
         '''
-        GraphFrame.make_scaterplot(independant, dependant, *, ...): void\n
-        independant: seq: x-axis values\n
-        dependant: numeric seq: y-axis values\n
-        xName: str: x-axis label\n
-        yName: str: y-axis label\n
-        title: str: title of graph\n
-        xAreDates: bool: look at the x axis data as a date: False\n
-        treatAsText: boolean: treat all data as text, not as dates: False\n
-        timespan: str: format: "<num units>.<units>": 1.w\n
-            units: 'W' -> week, 'M' -> month (30 days), 'Y' -> year (12 months)\n
-        pointSize: int or float: size of the point wanted (default: 10)\n
-        pointColor: str: color of point wanted (default: 'black')\n
+        GraphFrame.make_scaterplot(self, e): void\n
         e: event handler: DO NOT CHANGE THIS VALUE
+
+        displays a scatterplot
         '''
 
         #remove rows with no values
-        cleanedData = self.clean_data(independant, dependant)
+        cleanedData = self.clean_data(self.xData, self.yData)
 
 
         # separate the independant and dependant variables
         self.xData = cleanedData.loc[:, "x"]
         self.yData = cleanedData.loc[:, "y"]
-
-        #store every important label
-        self.__align_params(locals())
 
         self.update_idletasks()
         self.master.update_idletasks()
@@ -175,11 +185,15 @@ class Graphing (tk.Frame):
             #create new blank slate
             self.__reset_plot(plotWidth, plotHeight, dpiRef)
 
+            #reduce clutter of x axis
+            self.fig.autofmt_xdate()
+
             #graph the scatter plot
             self.ax.scatter(self.xData,
                             self.yData,
                             s=self.graphAtts["pointSize"],
                             c=self.graphAtts["pointColor"])
+        
             
             #set axis labels
             self.ax.title.set_text(self.graphAtts["title"])
@@ -193,15 +207,15 @@ class Graphing (tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, independant, dependant, xName="", yName="",
+    def __make_bar_graph(self, independant, dependant, *, xName="", yName="",
                        title="", makeHistogram=False, fillColor="black"):
         pass
-    def __make_line_chart(self, independant, dependant, xName='', yName='',
+    def __make_line_chart(self, independant, dependant, *,xName='', yName='',
                           title='', xAreDates=False, treatAsText =False, 
                           treatAsRange=False, timespan='1.W', pointSize=10,
                           lineWidth=5, pointColor='black', lineColor="black"):
         pass
-    def __make_pie_chart(self, independant, dependant, colorcode=[]):
+    def __make_pie_chart(self, independant, dependant, *, colorcode=[]):
         pass
 
     def __filter_dates(self):
@@ -339,7 +353,7 @@ def main():
     x2 = [datetime.date(year=2024, month=3, day=4)]
     add = datetime.timedelta(days=1)
 
-    for i in range(30):
+    for i in range(len(y) - 1):
         x2.append(x2[-1] + add)
 
     
@@ -351,21 +365,14 @@ def main():
 
         x2[i] = "{}/{}/{}".format(month, day, year)
 
-    print(x2)
     y = y[:len(x2)]
     
 
 
+    test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
+                        pointSize=3, pointColor='black', xAreDates=True)
 
-    test.create_graph(
-        x2, y,
-        xName='X',
-        yName='Y',
-        title='X Versus Y', 
-        pointSize=3,
-        pointColor='black',
-        xAreDates=True
-    )
+    test.create_graph()
 
     root.mainloop()
 

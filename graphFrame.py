@@ -65,11 +65,11 @@ class Graphing (tk.Frame):
             widget.destroy()
         
         #test run
-        self.make_scatterplot(independant=independant,
+        self.__make_scatterplot(independant=independant,
                               dependant=dependant, e=e,
                               **kwargs)
         
-    def align_params(self, funcParams: dict):
+    def __align_params(self, funcParams: dict):
         """
         GraphFrame.align_params(self, selfParams, funcParams)\n
         funcParams: dict: parameters and corresponding values for the function\n
@@ -80,8 +80,44 @@ class Graphing (tk.Frame):
         #self configuration
         if funcParams["e"] == None:
             self.graphAtts = funcParams
+    
+    def __reset_plot(self, plotWidth: float|int, plotHeight: float|int,
+                     dpiRef:float|int) -> None:
+        """
+        Graph.__reset_plot(self, plotWidth, plotHeight, dpiRef) -> None
+        plotWidth: float|int: width of the window
+        plotHeight: float|int: height of the window
+        dpiRef: float|int: minimum of plotWidth and plotHeight
+        Resets the fig and axis
+        """
+
+        #reset the plot if a chart has already been initialized
+        if not hasattr(self, "fig") or self.fig is None:
+            #initialize the figure
+            self.fig = plt.figure()
+            #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+        if hasattr(self, "ax"):
+            del self.ax
+
+        # clear the figure and create a new axis
+        self.fig.clear()
+
+        #create the axis where the chart will be made
+        self.ax = self.fig.add_subplot(111)
+
+        #resize fig
+        self.fig.set_size_inches(plotWidth//120, plotHeight//110)
+        self.fig.set_dpi(dpiRef/8)
+        #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+
+        #save the scatterplot on the frame
+        self.graph = FigureCanvasTkAgg(self.fig, self)
+        chart = self.graph.get_tk_widget()
+        chart.configure(width=plotWidth, height=plotHeight)
+        chart.pack()
+
             
-    def make_scatterplot(self, independant, dependant,*, xName='', yName='',
+    def __make_scatterplot(self, independant, dependant,*, xName='', yName='',
                           title='', xAreDates=False, treatAsText =False, timespan='1.W', pointSize=10,
                           pointColor='black', e=None):
         '''
@@ -100,7 +136,6 @@ class Graphing (tk.Frame):
         e: event handler: DO NOT CHANGE THIS VALUE
         '''
 
-
         #remove rows with no values
         cleanedData = self.clean_data(independant, dependant)
 
@@ -110,7 +145,7 @@ class Graphing (tk.Frame):
         self.yData = cleanedData.loc[:, "y"]
 
         #store every important label
-        self.align_params(locals())
+        self.__align_params(locals())
 
         self.update_idletasks()
         self.master.update_idletasks()
@@ -120,36 +155,25 @@ class Graphing (tk.Frame):
         plotHeight = self.winfo_height()
         dpiRef = min(plotHeight, plotWidth)
 
-
         #make sure reference dict is not empty
         #if it is, then it means the window just opened without any data
         if self.graphAtts != {}:
-            #reset the plot if a chart has already been initialized
-            if not hasattr(self, "fig") or self.fig is None:
-                #initialize the figure
-                self.fig = plt.figure()
-                #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
-            if hasattr(self, "ax"):
-                del self.ax
-
-            # clear the figure and create a new axis
-            self.fig.clear()
-
-            #create the axis where the chart will be made
-            self.ax = self.fig.add_subplot(111)
-
-            #resize fig
-            self.fig.set_size_inches(plotWidth//120, plotHeight//110)
-            self.fig.set_dpi(dpiRef/8)
-            #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
 
             #if the data is text: convert to string
             if self.graphAtts["treatAsText"]:
                 self.xData = self.xData.astype(str)
             #else if the data are dates, convert to datetime
             elif self.graphAtts["xAreDates"]:
-                #convert all days to datetime to work with them easier
-                self.xData = self.convert_to_datetime(self.xData)
+                #if this function is executed by event handler, x are already dates
+                #else, convert them to dates
+                if not e:
+                    #convert all days to datetime to work with them easier
+                    # filter them tp be within specified timeframe
+                    self.__filter_dates()
+
+            #reset the matplotlib plot -- remove current one from memory
+            #create new blank slate
+            self.__reset_plot(plotWidth, plotHeight, dpiRef)
 
             #graph the scatter plot
             self.ax.scatter(self.xData,
@@ -161,12 +185,6 @@ class Graphing (tk.Frame):
             self.ax.title.set_text(self.graphAtts["title"])
             self.ax.set_xlabel(self.graphAtts["xName"])
             self.ax.set_ylabel(self.graphAtts["yName"])
-
-            #save the scatterplot on the frame
-            self.graph = FigureCanvasTkAgg(self.fig, self)
-            chart = self.graph.get_tk_widget()
-            chart.configure(width=plotWidth, height=plotHeight)
-            chart.pack()
             
             #draw the chart
             self.graph.draw()
@@ -175,16 +193,48 @@ class Graphing (tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def make_bar_graph(self, independant, dependant, xName="", yName="",
+    def __make_bar_graph(self, independant, dependant, xName="", yName="",
                        title="", makeHistogram=False, fillColor="black"):
         pass
-    def make_line_chart(self, independant, dependant, xName='', yName='',
+    def __make_line_chart(self, independant, dependant, xName='', yName='',
                           title='', xAreDates=False, treatAsText =False, 
                           treatAsRange=False, timespan='1.W', pointSize=10,
                           lineWidth=5, pointColor='black', lineColor="black"):
         pass
-    def make_pie_chart(self, independant, dependant, colorcode=[]):
+    def __make_pie_chart(self, independant, dependant, colorcode=[]):
         pass
+
+    def __filter_dates(self):
+        """
+        GraphFrame.__filter_dates(self)
+        filters the dates to be in desired time frame
+        """
+
+        # convert the current xData to datetime
+        self.xData = self.convert_to_datetime(self.xData)
+
+        #get the desired timeframe
+        timeFrame = self.graphAtts["timespan"].split(".")
+
+        #make sure the xData and yData are within the range specified
+            #put self.xValues and self.yValyes in temporary dataFrame
+            #the columns are [date, value]
+            #sort the dataFrame by date in descending order
+            #cast timeFrame[0] to int; this is the number of iterations
+            #if timeFrame[1] == "W", filter by num weeks
+                # have the earliest date be timeSpan[0] * 7 days before
+                #most recent date
+            #else if timeSpan[1] == "M", filter by num months
+                # have beginning date be int value of
+                #(timeSpan[0] * 30.44 days) before most recent date
+            #else if timeSpan[1] == "Y", filter by num years
+                # have the beginning date be int value of
+                #(timeSpan[0] * 365.25 days) before most recent date
+            # filter the dataframe and remove all rows that are less than
+            #specified beginning date
+            #reassign self.xValues and self.yValues based on dataframe
+
+        #delete temporary dataframe from memory
          
     def convert_to_datetime(self, dates) -> list[datetime.date]:
         '''
@@ -265,12 +315,12 @@ def main():
     for a in x:
         try:
             newValue = a / (1 + a**2)**2
-
-
         except:
             newValue = None
         finally:
             y.append(newValue)
+
+    del a
 
     y = np.array(y)
 
@@ -280,26 +330,42 @@ def main():
             if (y[i] > 50) or (y[i] < -50):
                 indexToDelete.append(i)
 
+    del i
+
     y = np.delete(y, indexToDelete)
     x = np.delete(x, indexToDelete)
 
 
-    y2 = [datetime.date(year=2024, month=3, day=4)]
+    x2 = [datetime.date(year=2024, month=3, day=4)]
     add = datetime.timedelta(days=1)
 
-    for value in range(len(x)):
-        pass
+    for i in range(30):
+        x2.append(x2[-1] + add)
+
+    
+
+    for i in range(len(x2)):
+        year = x2[i].year
+        month = x2[i].month
+        day = x2[i].day
+
+        x2[i] = "{}/{}/{}".format(month, day, year)
+
+    print(x2)
+    y = y[:len(x2)]
+    
+
 
 
     test.create_graph(
-        x, y,
+        x2, y,
         xName='X',
         yName='Y',
         title='X Versus Y', 
         pointSize=3,
         pointColor='black',
+        xAreDates=True
     )
-
 
     root.mainloop()
 

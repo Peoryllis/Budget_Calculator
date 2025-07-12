@@ -78,7 +78,7 @@ class Graphing (tk.Frame):
         Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
         pointColor, lineWidth, lineColor
 
-        unique to bar chart: xAreDates, makeHistorgram, fillColor
+        unique to bar chart: makeHistorgram, fillColor
 
         unique to pie chart: 
             - colorcode: iterable: list: list of colors to be used

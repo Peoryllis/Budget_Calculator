@@ -40,14 +40,18 @@ class Graphing (tk.Frame):
         self.charts = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
         self.type = self.charts[0]
 
+        # initialize where xData, yData, and graph attributes
         self.xData = []
         self.yData = []
         self.graphAtts={}
 
+        #allow graphs to change size with window size
         self.bind("<Configure>", 
                     lambda e: self.create_graph(e=e), 
                     "+")
         
+        #put in key valyes to self.graphAtts
+        #so program can start up properly
         self.set_attributes()
             
     def switch_graph(self, graphType, **kwargs):

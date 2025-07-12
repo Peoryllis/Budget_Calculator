@@ -179,10 +179,10 @@ class Graphing (tk.Frame):
             #else if the data are dates, convert to datetime
             elif self.graphAtts["xAreDates"]:
                 #if this function is executed by event handler, x are already dates
-                #else, convert them to dates
+                #else, convert them to dates and filter them by timeframe
                 if not e:
                     #convert all days to datetime to work with them easier
-                    # filter them tp be within specified timeframe
+                    # filter them to be within specified timeframe
                     self.__filter_dates()
 
             #reset the matplotlib plot -- remove current one from memory
@@ -234,25 +234,58 @@ class Graphing (tk.Frame):
         #get the desired timeframe
         timeFrame = self.graphAtts["timespan"].split(".")
 
+        #cast the M/W/Y noatation to uppercase
+        timeFrame[1] = timeFrame[1].upper()
+
         #make sure the xData and yData are within the range specified
-            #put self.xValues and self.yValyes in temporary dataFrame
-            #the columns are [date, value]
-            #sort the dataFrame by date in descending order
-            #cast timeFrame[0] to int; this is the number of iterations
-            #if timeFrame[1] == "W", filter by num weeks
-                # have the earliest date be timeSpan[0] * 7 days before
-                #most recent date
-            #else if timeSpan[1] == "M", filter by num months
-                # have beginning date be int value of
-                #(timeSpan[0] * 30.44 days) before most recent date
-            #else if timeSpan[1] == "Y", filter by num years
-                # have the beginning date be int value of
-                #(timeSpan[0] * 365.25 days) before most recent date
-            # filter the dataframe and remove all rows that are less than
-            #specified beginning date
-            #reassign self.xValues and self.yValues based on dataframe
+        #put self.xValues and self.yValyes in temporary dataFrame
+        #the columns are [date, value]
+        tempData = pd.DataFrame(
+            {"date": self.xData, "value": self.yData},
+        )
+
+        #sort the dataFrame by date in descending order
+        tempData = tempData.sort_values(
+            "date",
+            ascending=False,
+            ignore_index=True
+            )
+        
+
+        #cast timeFrame[0] to int; this is the number of iterations
+        timeFrame[0] = int(timeFrame[0])
+
+        #if timeFrame[1] == "W", filter by num weeks
+        if timeFrame[1] == "W":
+            # have the earliest date be timeSpan[0] * 7 days before
+            #most recent date
+            timeSubtract = datetime.timedelta(timeFrame[0] * 7)
+            beginningDate = tempData.date[0] - timeSubtract
+
+        #else if timeSpan[1] == "M", filter by num months
+        elif timeFrame[1] == "M":
+            # have beginning date be 
+            #(int valye timeSpan[0] * 30.44 days) before most recent date
+            timeSubtract = datetime.timedelta(int(timeFrame[0] * 30.44))
+            beginningDate = tempData.date[0] - timeSubtract
+
+        #else if timeSpan[1] == "Y", filter by num years
+        elif timeFrame[1] == "Y":
+            # have the beginning date be
+            #(int value of timeSpan[0] * 365.25 days) before most recent date
+            timeSubtract = datetime.timedelta(int(timeFrame[0] * 365.25))
+            beginningDate = tempData.date[0] - timeSubtract
+
+        # filter the dataframe and remove all rows that are less than
+        #specified beginning date
+        tempData = tempData[tempData.date >= beginningDate]
+
+        #reassign self.xValues and self.yValues based on dataframe
+        self.xData = tempData.date
+        self.yData = tempData.value
 
         #delete temporary dataframe from memory
+        del tempData
          
     def convert_to_datetime(self, dates) -> list[datetime.date]:
         '''
@@ -374,7 +407,8 @@ def main():
 
 
     test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black', xAreDates=True)
+                        pointSize=3, pointColor='black', xAreDates=True,
+                        timespan="6.M")
 
     test.create_graph()
 

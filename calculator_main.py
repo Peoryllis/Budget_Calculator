@@ -16,6 +16,7 @@ import graphFrame
 
 #import my special tkinter objects
 sys.path.append("/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/")
+
 import tkinterPlus2 as tk2
 
 #create the window

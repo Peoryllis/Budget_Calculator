@@ -1,0 +1,9 @@
+{
+    "python.analysis.extraPaths": [
+        "/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/tkinterPlus2.py"
+    ]
+    
+}

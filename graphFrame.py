@@ -14,12 +14,9 @@ import sys
 import math
 import datetime
 from datetime import datetime as dt 
+from typing import *
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
-
-from Special_tkinter_objects import tkinterPlus2 as tk2
-from other_python_docs import quick_math_operations as math2
-
 
 class Graphing (tk.Frame):
     '''Make a Frame to display the different graphs'''
@@ -66,30 +63,50 @@ class Graphing (tk.Frame):
         #draw the graph
         self.create_graph()
     
-    def set_attributes(self, independant= [], dependant=[], *, xName: str='', yName: str='', title: str='',
-                       xAreDates: bool=False, treatAsText:bool=False,
-                       timespan:str='1.W', pointSize:int=10,
-                       pointColor:str='black', makeHistogram:bool=False,
-                       fillColor:str="black", lineWidth:int=5,
-                       lineColor:str="black", colorcode=[]) -> None:
+    def set_attributes(
+            self, independant:Iterable= [], dependant:Iterable[int|float]=[],
+            *, xName: str='', yName: str='', title: str='',
+            xAreDates: bool=False, treatAsText:bool=False, timespan:str='all',
+            pointSize:int=10, pointColor:str='black', makeHistogram:bool=False,
+            fillColor:str="black", lineWidth:int=5, lineColor:str="black",
+            colorcode:Iterable[str]=[]
+            ) -> None:
         
         """
-        GraphFrame.set_attributes(): sets up the attributes for the chart
-        independant: iterable: list of all x values
-        dependent: iterable: list of all y values
+        GraphFrame.set_attributes(): sets up the attributes for the chart\n
+        independant: iterable: list of all x values\n
+        dependent: iterable: list of all y values\n
+        xName: str: x-axis label\n
+        yName: str: y-axis label\n
+        title: str: title of the graph\n
+        xAreDates: bool: treat x values as dates\n
+        treatAsText: bool: treat x values as plain text\n
+        timespan: str: num_iterations.unit_of_time | all\n
+            'W' -> Week\n
+            'M' -> Month\n
+            'Y' -> year\n
+            'all' -> all time\n
 
-        Used with all charts: xName, yName, title
+        pointSize: int: size of the point\n
+        pointColor: str: pointColor\n
+        makeHistogram: bool: make the bar chart as a histogram\n
+        fillColor: str: color to fill bar chart\n
+        lineWidth: int: size of line for line chart\n
+        lineColor: str: color of line chart line\n
+        colorcode: seq[str]: list of all the colors to be used by pie chart\n
+
+        Used with all charts: xName, yName, title\n
 
         Unique to scatterplot: xAreDates, treatAsText, timespan, pointSize,
-        pointColor
+        pointColor\n
 
         Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
-        pointColor, lineWidth, lineColor
+        pointColor, lineWidth, lineColor\n
 
-        unique to bar chart: makeHistorgram, fillColor
+        unique to bar chart: makeHistorgram, fillColor\n
 
         unique to pie chart: 
-            - colorcode: iterable: list: list of colors to be used
+            - colorcode: iterable: list: list of colors to be used\n
         """
         # set self.xValues and self.yValues to passed independant and dependant values
         self.xData, self.yData = independant, dependant
@@ -99,7 +116,7 @@ class Graphing (tk.Frame):
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
-    def create_graph(self, e=None) -> None:
+    def create_graph(self, e:tk.Event=None) -> None:
         '''GraphFrame.create_graph(graphType)\n
         independant: seq: x-axis values\n
         dependant: seq: numeric: y-axis values\n
@@ -117,6 +134,9 @@ class Graphing (tk.Frame):
         Graph.__reset_plot(self, plotWidth, plotHeight, dpiRef) -> None
         Resets the fig and axis
         """
+
+        self.update_idletasks()
+        self.master.update_idletasks()
 
         #store the length, width, and average of the two on the plot
         plotWidth = self.winfo_width()
@@ -148,7 +168,7 @@ class Graphing (tk.Frame):
         chart.configure(width=plotWidth, height=plotHeight)
         chart.pack()
             
-    def __make_scatterplot(self, e=None) -> None:
+    def __make_scatterplot(self, e:tk.Event=None) -> None:
         '''
         GraphFrame.make_scaterplot(self, e): void\n
         e: event handler: DO NOT CHANGE THIS VALUE
@@ -157,12 +177,7 @@ class Graphing (tk.Frame):
         '''
 
         #remove rows with no values
-        cleanedData = self.clean_data(self.xData, self.yData)
-
-
-        # separate the independant and dependant variables
-        self.xData = cleanedData.loc[:, "x"]
-        self.yData = cleanedData.loc[:, "y"]
+        self.__clean_data()
 
         self.update_idletasks()
         self.master.update_idletasks()
@@ -209,13 +224,13 @@ class Graphing (tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, e=None):
+    def __make_bar_graph(self, e:tk.Event=None):
         pass
 
-    def __make_line_chart(self, e=None):
+    def __make_line_chart(self, e:tk.Event=None):
         pass
 
-    def __make_pie_chart(self, e=None):
+    def __make_pie_chart(self, e:tk.Event=None):
         pass
 
     def __filter_dates(self):
@@ -225,65 +240,67 @@ class Graphing (tk.Frame):
         """
 
         # convert the current xData to datetime
-        self.xData = self.convert_to_datetime(self.xData)
+        self.__convert_to_datetime()
 
-        #get the desired timeframe
-        timeFrame = self.graphAtts["timespan"].split(".")
+        #check to see if user wants all time; if not, filter by timespan
+        if self.graphAtts['timespan'].lower() != "all":
+            #get the desired timeframe
+            timeFrame = self.graphAtts["timespan"].split(".")
 
-        #cast the M/W/Y noatation to uppercase
-        timeFrame[1] = timeFrame[1].upper()
+            #cast the M/W/Y noatation to uppercase
+            timeFrame[1] = timeFrame[1].upper()
 
-        #make sure the xData and yData are within the range specified
-        #put self.xValues and self.yValyes in temporary dataFrame
-        #the columns are [date, value]
-        tempData = pd.DataFrame(
-            {"date": self.xData, "value": self.yData},
-        )
-
-        #sort the dataFrame by date in descending order
-        tempData = tempData.sort_values(
-            "date",
-            ascending=False,
-            ignore_index=True
+            #make sure the xData and yData are within the range specified
+            #put self.xValues and self.yValyes in temporary dataFrame
+            #the columns are [date, value]
+            tempData = pd.DataFrame(
+                {"date": self.xData, "value": self.yData},
             )
-        
 
-        #cast timeFrame[0] to int; this is the number of iterations
-        timeFrame[0] = int(timeFrame[0])
+            #sort the dataFrame by date in descending order
+            tempData = tempData.sort_values(
+                "date",
+                ascending=False,
+                ignore_index=True
+                )
+            
 
-        #if timeFrame[1] == "W", filter by num weeks
-        if timeFrame[1] == "W":
-            # have the earliest date be timeSpan[0] * 7 days before
-            #most recent date
-            timeSubtract = datetime.timedelta(timeFrame[0] * 7)
-            beginningDate = tempData.date[0] - timeSubtract
+            #cast timeFrame[0] to int; this is the number of iterations
+            timeFrame[0] = int(timeFrame[0])
 
-        #else if timeSpan[1] == "M", filter by num months
-        elif timeFrame[1] == "M":
-            # have beginning date be 
-            #(int valye timeSpan[0] * 30.44 days) before most recent date
-            timeSubtract = datetime.timedelta(int(timeFrame[0] * 30.44))
-            beginningDate = tempData.date[0] - timeSubtract
+            #if timeFrame[1] == "W", filter by num weeks
+            if timeFrame[1] == "W":
+                # have the earliest date be timeSpan[0] * 7 days before
+                #most recent date
+                timeSubtract = datetime.timedelta(timeFrame[0] * 7)
+                beginningDate = tempData.date[0] - timeSubtract
 
-        #else if timeSpan[1] == "Y", filter by num years
-        elif timeFrame[1] == "Y":
-            # have the beginning date be
-            #(int value of timeSpan[0] * 365.25 days) before most recent date
-            timeSubtract = datetime.timedelta(int(timeFrame[0] * 365.25))
-            beginningDate = tempData.date[0] - timeSubtract
+            #else if timeSpan[1] == "M", filter by num months
+            elif timeFrame[1] == "M":
+                # have beginning date be 
+                #(int valye timeSpan[0] * 30.44 days) before most recent date
+                timeSubtract = datetime.timedelta(int(timeFrame[0] * 30.44))
+                beginningDate = tempData.date[0] - timeSubtract
 
-        # filter the dataframe and remove all rows that are less than
-        #specified beginning date
-        tempData = tempData[tempData.date >= beginningDate]
+            #else if timeSpan[1] == "Y", filter by num years
+            elif timeFrame[1] == "Y":
+                # have the beginning date be
+                #(int value of timeSpan[0] * 365.25 days) before most recent date
+                timeSubtract = datetime.timedelta(int(timeFrame[0] * 365.25))
+                beginningDate = tempData.date[0] - timeSubtract
 
-        #reassign self.xValues and self.yValues based on dataframe
-        self.xData = tempData.date
-        self.yData = tempData.value
+            # filter the dataframe and remove all rows that are less than
+            #specified beginning date
+            tempData = tempData[tempData.date >= beginningDate]
 
-        #delete temporary dataframe from memory
-        del tempData
+            #reassign self.xValues and self.yValues based on dataframe
+            self.xData = tempData.date
+            self.yData = tempData.value
+
+            #delete temporary dataframe from memory
+            del tempData
          
-    def convert_to_datetime(self, dates) -> list[datetime.date]:
+    def __convert_to_datetime(self) -> None:
         '''
         GraphFrame.convert_to_datetime(dates)\n
         dates: seq: str: valid dates separated by '/'\n
@@ -294,7 +311,7 @@ class Graphing (tk.Frame):
         '''
         #store the dates in a new format and save it to variable
         tempIndependant = []
-        for element in dates:
+        for element in self.xData:
             #split it into a list so we can work with each unit at a time
             element = element.split("/")
 
@@ -317,7 +334,7 @@ class Graphing (tk.Frame):
             #add it to the list of dates
             tempIndependant.append(newDate.date())
 
-        return tempIndependant
+        self.xData = tempIndependant
 
     def close(self) -> None:
         """
@@ -330,7 +347,7 @@ class Graphing (tk.Frame):
         #destory the frame
         self.destroy()
 
-    def clean_data(self, independant, dependant) -> pd.DataFrame:
+    def __clean_data(self) -> None:
         '''
         GraphFrame.clean_data(independant, dependant)\n
         independant: seq: x-axis values\n
@@ -338,9 +355,18 @@ class Graphing (tk.Frame):
         cleans the data by filtering out None types and null\n
         returns DataFrame: {'x': independant, 'y': dependant}\n
         '''
-        data = pd.DataFrame({'x': independant, 'y': dependant})
 
-        return data.dropna()
+        #save data to dataframe
+        data = pd.DataFrame({'x': self.xData, 'y': self.yData})
+
+        #drop all rows with no values
+        data = data.dropna()
+
+        # declare the cleaned data to xData and yData
+        self.xData = data.x
+        self.yData = data.y
+
+        del data
 
 
 #### test  ####
@@ -362,7 +388,7 @@ def main():
     
     for a in x:
         try:
-            newValue = a / (1 + a**2)**2
+            newValue = math.sin(a) + math.log1p(abs(a))  
         except:
             newValue = None
         finally:
@@ -403,11 +429,10 @@ def main():
     
 
 
-    test.set_attributes(x, y, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black', treatAsText=False)
+    test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
+                        pointSize=3, pointColor='black',xAreDates=True, timespan="3.Y")
 
     test.create_graph()
-
 
     root.mainloop()
 

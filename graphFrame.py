@@ -64,7 +64,7 @@ class Graphing (tk.Frame):
         self.create_graph()
     
     def set_attributes(
-            self, independant:Iterable= [], dependant:Iterable[int|float]=[],
+            self, independant:Iterable[Any]= [], dependant:Iterable[int|float]=[],
             *, xName: str='', yName: str='', title: str='',
             xAreDates: bool=False, treatAsText:bool=False, timespan:str='all',
             pointSize:int=10, pointColor:str='black', makeHistogram:bool=False,
@@ -86,7 +86,6 @@ class Graphing (tk.Frame):
             'M' -> Month\n
             'Y' -> year\n
             'all' -> all time\n
-
         pointSize: int: size of the point\n
         pointColor: str: pointColor\n
         makeHistogram: bool: make the bar chart as a histogram\n
@@ -105,7 +104,7 @@ class Graphing (tk.Frame):
 
         unique to bar chart: makeHistorgram, fillColor\n
 
-        unique to pie chart: 
+        unique to pie chart: \n
             - colorcode: iterable: list: list of colors to be used\n
         """
         # set self.xValues and self.yValues to passed independant and dependant values
@@ -431,7 +430,7 @@ def main():
 
     test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
                         pointSize=3, pointColor='black',xAreDates=True, timespan="3.Y")
-
+    
     test.create_graph()
 
     root.mainloop()

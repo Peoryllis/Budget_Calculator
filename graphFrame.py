@@ -14,7 +14,7 @@ import sys
 import math
 import datetime
 from datetime import datetime as dt 
-from typing import *
+import typing as t
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
@@ -62,14 +62,21 @@ class Graphing (tk.Frame):
 
         #draw the graph
         self.create_graph()
+
+    def update_data(
+            self,
+            independant:t.Iterable[t.Any]=None,
+            dependant:t.Iterable[int|float]=None
+            ):
+        pass
     
     def set_attributes(
-            self, independant:Iterable[Any]= [], dependant:Iterable[int|float]=[],
+            self, independant:t.Iterable[t.Any]= [], dependant:t.Iterable[int|float]=[],
             *, xName: str='', yName: str='', title: str='',
             xAreDates: bool=False, treatAsText:bool=False, timespan:str='all',
             pointSize:int=10, pointColor:str='black', makeHistogram:bool=False,
             fillColor:str="black", lineWidth:int=5, lineColor:str="black",
-            colorcode:Iterable[str]=[]
+            colorcode:t.Iterable[str]=[]
             ) -> None:
         
         """

@@ -64,34 +64,33 @@ class Budget_Calculator(tk.Frame):
 
         self.selectedColor.append(tk2._from_rgb(self.selectedColor[0]))
 
-        self.modes = ['income and savings',
-                    'expenses',
-                    'analysis',
-                    'investments'
-                    ] #keep track of all possible modes
+        self.modes = [
+            'income and savings',
+            'expenses',
+            'analysis',
+            'investments'
+            ] #keep track of all possible modes
         
         self.selectedMode = self.modes[0] #know what mode you are in
 
 
         #keep the tabs in a narrow frame about right next to each other
 
-        tabFrame = tk.Frame(
-            self,
-            bg=self['bg']
-        )
+        tabFrame = tk.Frame(self, bg=self['bg'])
 
 
         tabFrame.place(relx=0, rely=0.052, relwidth=1) 
 
         #create a button have user select the income section -- tkinter.Button not working on MacOS
 
-        self.incomeTab = tk.Label(tabFrame, 
-                        text=self.modes[0],
-                        font=('Georgia', 24,),
-                        fg='white',
-                        bg=self.unselectedColor[1],
-                        relief='groove'
-                        )
+        self.incomeTab = tk.Label(
+            tabFrame, 
+            text=self.modes[0],
+            font=('Georgia', 24,),
+            fg='white',
+            bg=self.unselectedColor[1],
+            relief='groove'
+            )
         
         self.incomeTab.bind('<Button>', lambda: self.set_mode(0)) #make it a working button
         

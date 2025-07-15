@@ -15,7 +15,9 @@ import sys
 import graphFrame
 
 #import my special tkinter objects
-sys.path.append("/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/")
+sys.path.append(
+    "/Users/anayaahanotu/Documents/Coding/GitHub/Special_tkinter_objects/"
+    )
 
 import tkinterPlus2 as tk2
 
@@ -92,19 +94,21 @@ class Budget_Calculator(tk.Frame):
             relief='groove'
             )
         
-        self.incomeTab.bind('<Button>', lambda: self.set_mode(0)) #make it a working button
+        #make it a working button
+        self.incomeTab.bind('<Button>', lambda: self.set_mode(0)) 
         
         self.incomeTab.grid(row=0, column=0, padx=2) #place it on the screen
 
         #create a button have user select the income analysis section
 
-        self.expensesTab = tk.Label(tabFrame,
-                        text=self.modes[1],
-                        font=('Georgia', 24,),
-                        fg='white',
-                        bg=self.unselectedColor[1],
-                        relief='groove'
-                        )
+        self.expensesTab = tk.Label(
+            tabFrame,
+            text=self.modes[1],
+            font=('Georgia', 24,),
+            fg='white',
+            bg=self.unselectedColor[1],
+            relief='groove' 
+            )
         
         self.expensesTab.bind('Button', lambda: self.set_mode(1)) #make it a working button
         
@@ -114,13 +118,14 @@ class Budget_Calculator(tk.Frame):
 
         #create a button have user select the budget for desires button section
 
-        self.budgetTab = tk.Label(tabFrame, 
-                        text=self.modes[2],
-                        font=('Georgia', 24,),
-                        fg='white',
-                        bg=self.selectedColor[1],
-                        relief='groove'
-                        )
+        self.budgetTab = tk.Label(
+            tabFrame, 
+            text=self.modes[2],
+            font=('Georgia', 24,),
+            fg='white',
+            bg=self.selectedColor[1],
+            relief='groove'
+            )
         
          #make it a working button
         self.budgetTab.bind('<Button>', lambda: self.set_mode(2))
@@ -129,13 +134,14 @@ class Budget_Calculator(tk.Frame):
 
         #create a button have user select the budget for desires button section
 
-        self.investmentsTab = tk.Label(tabFrame, 
-                        text=self.modes[3],
-                        font=('Georgia', 24,),
-                        fg='white',
-                        bg=self.unselectedColor[1],
-                        relief='groove'
-                        )
+        self.investmentsTab = tk.Label(
+            tabFrame, 
+            text=self.modes[3],
+            font=('Georgia', 24,),
+            fg='white',
+            bg=self.unselectedColor[1],
+            relief='groove'
+            )
         
          #make it a working button
         self.investmentsTab.bind('<Button>', lambda: self.set_mode(3))
@@ -173,10 +179,16 @@ class Budget_Calculator(tk.Frame):
 
          #figure out where the main window should begin
 
-        starty = float(tabFrame.place_info()['rely']) + float(tabFrame.winfo_height()/self.winfo_height())
+        starty = (float(tabFrame.place_info()['rely']) +
+                  float(tabFrame.winfo_height()/self.winfo_height()))
 
         #above code allows for less messy placement of the window
-        self.window.place(relx=0, rely=starty, relwidth=1, relheight=1-starty) 
+        self.window.place(
+            relx=0,
+            rely=starty,
+            relwidth=1,
+            relheight=1-starty
+            ) 
 
         #set up the frames that display the data
         

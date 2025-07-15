@@ -18,8 +18,8 @@ import typing as t
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
-class Graphing (tk.Frame):
-    '''Make a Frame to display the different graphs'''
+class Graphing(tk.Frame):
+    '''Make a Frame to display different graphs'''
     
     def __init__(self, master:tk.Frame|tk.Tk, **kwargs):
         '''GraphFrame(args, kwargs):\n
@@ -34,18 +34,20 @@ class Graphing (tk.Frame):
         #give the list of modes and set the mode
         #these are meant to be private atts 
         #but would have to change a whole bunch of code to update
-        self.charts = ['Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart']
-        self.type = self.charts[0]
+        self.__CHARTS:tuple[str] = ('Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart')
+        self.type:str = self.__CHARTS[0]
 
         # initialize where xData, yData, and graph attributes
-        self.xData = []
-        self.yData = []
-        self.graphAtts={}
+        self.xData:list = []
+        self.yData:list[int|float] = []
+        self.graphAtts:dict = {}
 
         #allow graphs to change size with window size
-        self.bind("<Configure>", 
-                    lambda e: self.create_graph(e=e), 
-                    "+")
+        self.bind(
+            "<Configure>", 
+            lambda e: self.create_graph(e=e), 
+            "+"
+            )
 
     def switch_graph(self, graphType:int) -> None:
         '''GraphFrame.switch_graph(graphType)\n
@@ -58,7 +60,7 @@ class Graphing (tk.Frame):
         '''
 
         #update graph mode
-        self.type = self.charts[graphType]
+        self.type = self._CHARTS[graphType]
 
         #draw the graph
         self.create_graph()
@@ -66,17 +68,55 @@ class Graphing (tk.Frame):
     def update_data(
             self,
             independant:t.Iterable[t.Any]=None,
-            dependant:t.Iterable[int|float]=None
+            dependant:t.Iterable[int|float]=None,
+            **kwargs
             ):
+        """
+        GraphFrame.update_data(): sets up the attributes for the chart\n
+        independant: iterable: list of all x values\n
+        dependent: iterable: list of all y values\n
+        kwargs: GraphFrame.set_attributs kwargs:\n
+            xName: str: x-axis label\n
+            yName: str: y-axis label\n
+            title: str: title of the graph\n
+            xAreDates: bool: treat x values as dates\n
+            treatAsText: bool: treat x values as plain text\n
+            timespan: str: num_iterations.unit_of_time | all\n
+                'W' -> Week\n
+                'M' -> Month\n
+                'Y' -> year\n
+                'all' -> all time\n
+            pointSize: int: size of the point\n
+            pointColor: str: pointColor\n
+            makeHistogram: bool: make the bar chart as a histogram\n
+            fillColor: str: color to fill bar chart\n
+            lineWidth: int: size of line for line chart\n
+            lineColor: str: color of line chart line\n
+            colorcode: seq[str]: list of all the colors to be used by pie chart\n
+
+            Used with all charts: xName, yName, title\n
+
+            Unique to scatterplot: xAreDates, treatAsText, timespan, pointSize,
+            pointColor\n
+
+            Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
+            pointColor, lineWidth, lineColor\n
+
+            unique to bar chart: makeHistorgram, fillColor\n
+
+            unique to pie chart: \n
+                - colorcode: iterable: list: list of colors to be used\n
+        """
         pass
     
     def set_attributes(
-            self, independant:t.Iterable[t.Any]= [], dependant:t.Iterable[int|float]=[],
-            *, xName: str='', yName: str='', title: str='',
-            xAreDates: bool=False, treatAsText:bool=False, timespan:str='all',
-            pointSize:int=10, pointColor:str='black', makeHistogram:bool=False,
-            fillColor:str="black", lineWidth:int=5, lineColor:str="black",
-            colorcode:t.Iterable[str]=[]
+            self, independant:t.Iterable[t.Any] = (), 
+            dependant:t.Iterable[int|float] = (),
+            *, xName: str = '', yName: str = '', title: str = '',
+            xAreDates: bool = False, treatAsText:bool = False, timespan:str = 'all',
+            pointSize:int = 10, pointColor:str = 'black', makeHistogram:bool = False,
+            fillColor:str = "black", lineWidth:int = 5, lineColor:str = "black",
+            colorcode:t.Iterable[str] = ()
             ) -> None:
         
         """
@@ -114,15 +154,16 @@ class Graphing (tk.Frame):
         unique to pie chart: \n
             - colorcode: iterable: list: list of colors to be used\n
         """
-        # set self.xValues and self.yValues to passed independant and dependant values
+        # set self.xValues passed independant values
+        # and self.yValues to  and dependant values
         self.xData, self.yData = independant, dependant
 
-        #update self.graphAtts except the first two items
+        #update self.graphAtts to be all attributes except the first two items
         self.graphAtts = locals()
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
-    def create_graph(self, e:tk.Event=None) -> None:
+    def create_graph(self, e:tk.Event = None) -> None:
         '''GraphFrame.create_graph(graphType)\n
         independant: seq: x-axis values\n
         dependant: seq: numeric: y-axis values\n
@@ -144,7 +185,8 @@ class Graphing (tk.Frame):
         self.update_idletasks()
         self.master.update_idletasks()
 
-        #store the length, width, and average of the two on the plot
+        #store the length, width, and average of length and width.
+        #the plot will reference these measurements to determine plot size
         plotWidth = self.winfo_width()
         plotHeight = self.winfo_height()
         dpiRef = min(plotHeight, plotWidth)
@@ -153,7 +195,8 @@ class Graphing (tk.Frame):
         if not hasattr(self, "fig") or self.fig is None:
             #initialize the figure
             self.fig = plt.figure()
-            #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+    
+        # remove current axis from memory.
         if hasattr(self, "ax"):
             del self.ax
 
@@ -193,18 +236,21 @@ class Graphing (tk.Frame):
         if self.graphAtts != {}:
 
             #if the data is text: convert to string
+            #allows matplotlib to interpret data as as text, not numeric
             if self.graphAtts["treatAsText"]:
                 self.xData = self.xData.astype(str)
+
             #else if the data are dates, convert to datetime
             elif self.graphAtts["xAreDates"]:
-                #if this function is executed by event handler, x are already dates
+                #if this function is executed by event handler,
+                # then x are already in the correct format.
                 #else, convert them to dates and filter them by timeframe
                 if not e:
                     #convert all days to datetime to work with them easier
                     # filter them to be within specified timeframe
                     self.__filter_dates()
 
-            #reset the matplotlib plot -- remove current one from memory
+            #reset the matplotlib plot -- remove current one from memory.
             #create new blank slate
             self.__reset_plot()
 
@@ -212,11 +258,12 @@ class Graphing (tk.Frame):
             self.fig.autofmt_xdate()
 
             #graph the scatter plot
-            self.ax.scatter(self.xData,
-                            self.yData,
-                            s=self.graphAtts["pointSize"],
-                            c=self.graphAtts["pointColor"])
-        
+            self.ax.scatter(
+                self.xData,
+                self.yData,
+                s=self.graphAtts["pointSize"],
+                c=self.graphAtts["pointColor"]
+                )
             
             #set axis labels
             self.ax.title.set_text(self.graphAtts["title"])
@@ -230,13 +277,13 @@ class Graphing (tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, e:tk.Event=None):
+    def __make_bar_graph(self, e:tk.Event = None):
         pass
 
-    def __make_line_chart(self, e:tk.Event=None):
+    def __make_line_chart(self, e:tk.Event = None):
         pass
 
-    def __make_pie_chart(self, e:tk.Event=None):
+    def __make_pie_chart(self, e:tk.Event = None):
         pass
 
     def __filter_dates(self):
@@ -256,8 +303,8 @@ class Graphing (tk.Frame):
             #cast the M/W/Y noatation to uppercase
             timeFrame[1] = timeFrame[1].upper()
 
-            #make sure the xData and yData are within the range specified
-            #put self.xValues and self.yValyes in temporary dataFrame
+            #make sure the xData and yData are within the range specified.
+            #put self.xValues and self.yValyes in temporary dataFrame.
             #the columns are [date, value]
             tempData = pd.DataFrame(
                 {"date": self.xData, "value": self.yData},
@@ -284,7 +331,7 @@ class Graphing (tk.Frame):
             #else if timeSpan[1] == "M", filter by num months
             elif timeFrame[1] == "M":
                 # have beginning date be 
-                #(int valye timeSpan[0] * 30.44 days) before most recent date
+                #(int value timeSpan[0] * 30.44 days) before most recent date
                 timeSubtract = datetime.timedelta(int(timeFrame[0] * 30.44))
                 beginningDate = tempData.date[0] - timeSubtract
 
@@ -368,7 +415,7 @@ class Graphing (tk.Frame):
         #drop all rows with no values
         data = data.dropna()
 
-        # declare the cleaned data to xData and yData
+        #declare the cleaned data to xData and yData
         self.xData = data.x
         self.yData = data.y
 

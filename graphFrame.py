@@ -29,12 +29,15 @@ class Graphing(tk.Frame):
 
         if "bg" in kwargs: del kwargs["bg"] #make sure bg is not added twice
 
-        tk.Canvas.__init__(self, master, bg='white', **kwargs) #initialize self
+        #initialize self
+        tk.Canvas.__init__(self, master, bg='white', **kwargs) 
 
         #give the list of modes and set the mode
         #these are meant to be private atts 
         #but would have to change a whole bunch of code to update
-        self.__CHARTS:tuple[str] = ('Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart')
+        self.__CHARTS:tuple[str] = (
+            'Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart'
+            )
         self.type:str = self.__CHARTS[0]
 
         # initialize where xData, yData, and graph attributes

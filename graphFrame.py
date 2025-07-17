@@ -32,7 +32,7 @@ class Graphing(tk.Frame):
         #initialize self
         tk.Canvas.__init__(self, master, bg='white', **kwargs) 
 
-        #give the list of modes and set the mode
+        #give the list of charts and set the mode
         #these are meant to be private atts 
         #but would have to change a whole bunch of code to update
         self.__CHARTS:tuple[str] = (
@@ -40,7 +40,8 @@ class Graphing(tk.Frame):
             )
         self.type:str = self.__CHARTS[0]
 
-        # initialize where xData, yData, and graph attributes
+        # initialize where independant, dependant
+        # and graph attributes will be stored
         self.xData:list = []
         self.yData:list[int|float] = []
         self.graphAtts:dict = {}
@@ -51,6 +52,9 @@ class Graphing(tk.Frame):
             lambda e: self.create_graph(e=e), 
             "+"
             )
+        
+    def get_graph_atts(self) -> dict:
+        return self.graphAtts
 
     def switch_graph(self, graphType:int) -> None:
         '''GraphFrame.switch_graph(graphType)\n
@@ -184,7 +188,7 @@ class Graphing(tk.Frame):
         Graph.__reset_plot(self, plotWidth, plotHeight, dpiRef) -> None
         Resets the fig and axis
         """
-
+        #update window to get most accurate window size
         self.update_idletasks()
         self.master.update_idletasks()
 
@@ -194,7 +198,7 @@ class Graphing(tk.Frame):
         plotHeight = self.winfo_height()
         dpiRef = min(plotHeight, plotWidth)
 
-        #reset the plot if a chart has already been initialized
+        #create a figure if it does not already exist
         if not hasattr(self, "fig") or self.fig is None:
             #initialize the figure
             self.fig = plt.figure()
@@ -212,9 +216,9 @@ class Graphing(tk.Frame):
         #resize fig
         self.fig.set_size_inches(plotWidth//120, plotHeight//110)
         self.fig.set_dpi(dpiRef/8)
-        #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART IS TO SCALE.
+        #ABOVE ARE THE DIMENSIONS NEEDED TO ENSURE CHART FITS IN THE WINDOW.
 
-        #save the scatterplot on the frame
+        #put the scatterplot on the frame
         self.graph = FigureCanvasTkAgg(self.fig, self)
         chart = self.graph.get_tk_widget()
         chart.configure(width=plotWidth, height=plotHeight)
@@ -236,6 +240,7 @@ class Graphing(tk.Frame):
 
         #make sure reference dict is not empty
         #if it is, then it means the window just opened without any data
+        # and nothing should be plotted
         if self.graphAtts != {}:
 
             #if the data is text: convert to string
@@ -251,6 +256,7 @@ class Graphing(tk.Frame):
                 if not e:
                     #convert all days to datetime to work with them easier
                     # filter them to be within specified timeframe
+                    # the user wants
                     self.__filter_dates()
 
             #reset the matplotlib plot -- remove current one from memory.
@@ -304,11 +310,14 @@ class Graphing(tk.Frame):
             timeFrame = self.graphAtts["timespan"].split(".")
 
             #cast the M/W/Y noatation to uppercase
+            #reduces case sensitivity
             timeFrame[1] = timeFrame[1].upper()
 
             #make sure the xData and yData are within the range specified.
-            #put self.xValues and self.yValyes in temporary dataFrame.
-            #the columns are [date, value]
+
+            #put self.xValues and self.yValyes in temporary dataFrame to 
+            #make sure the xvalues and yvalues are sorted along side each
+            #other and data does not get mixed up
             tempData = pd.DataFrame(
                 {"date": self.xData, "value": self.yData},
             )
@@ -321,7 +330,8 @@ class Graphing(tk.Frame):
                 )
             
 
-            #cast timeFrame[0] to int; this is the number of iterations
+            #cast timeFrame[0] to int; this is the number of iterations of
+            # the unit of time
             timeFrame[0] = int(timeFrame[0])
 
             #if timeFrame[1] == "W", filter by num weeks
@@ -384,12 +394,13 @@ class Graphing(tk.Frame):
             #set the format for the dates
             format = "%m/%d/%Y"
 
-            #make the newdate in date time format
+            #make the newdate in datetime format
             newDate = dt.strptime(tempDate, format)
 
             #add it to the list of dates
             tempIndependant.append(newDate.date())
-
+        
+        #update stored independant values to be in datetime format
         self.xData = tempIndependant
 
     def close(self) -> None:

@@ -49,7 +49,7 @@ class Graphing(tk.Frame):
         #allow graphs to change size with window size
         self.bind(
             "<Configure>", 
-            lambda e: self.create_graph(e=e), 
+            lambda e: self.__create_graph(newDates=False), 
             "+"
             )
         
@@ -79,8 +79,10 @@ class Graphing(tk.Frame):
             **kwargs
             ):
         """
-        GraphFrame.update_data(): sets up the attributes for the chart\n
+        GraphFrame.update_data(): None
+
         independant: iterable: list of all x values\n
+            dates must be in MM/DD/YYYY format! \n
         dependent: iterable: list of all y values\n
         kwargs: GraphFrame.set_attributs kwargs:\n
             xName: str: x-axis label\n
@@ -113,8 +115,13 @@ class Graphing(tk.Frame):
 
             unique to pie chart: \n
                 - colorcode: iterable: list: list of colors to be used\n
+
+            updates the attributes of the chart and draws a new graph
         """
-        pass
+
+        self.graphAtts.update(kwargs)
+
+        self.__create_graph(newDates=False)
     
     def set_attributes(
             self, independant:t.Iterable[t.Any] = (), 
@@ -127,8 +134,10 @@ class Graphing(tk.Frame):
             ) -> None:
         
         """
-        GraphFrame.set_attributes(): sets up the attributes for the chart\n
+        GraphFrame.set_attributes(): None
+
         independant: iterable: list of all x values\n
+            dates must be in MM/DD/YYYY format! \n
         dependent: iterable: list of all y values\n
         xName: str: x-axis label\n
         yName: str: y-axis label\n
@@ -160,6 +169,8 @@ class Graphing(tk.Frame):
 
         unique to pie chart: \n
             - colorcode: iterable: list: list of colors to be used\n
+
+        sets up the attributes for the chart and draws the graph
         """
         # set self.xValues passed independant values
         # and self.yValues to  and dependant values
@@ -170,10 +181,16 @@ class Graphing(tk.Frame):
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
-    def create_graph(self, e:tk.Event = None) -> None:
+        #draw the graph
+        self.__create_graph()
+
+
+
+    def __create_graph(self, newDates = True) -> None:
         '''GraphFrame.create_graph(graphType)\n
         independant: seq: x-axis values\n
         dependant: seq: numeric: y-axis values\n
+        newDates: bool: new dates entered (default True)
         '''
 
         #make sure we don't end up with multiple charts in one frame
@@ -181,7 +198,7 @@ class Graphing(tk.Frame):
             widget.destroy()
         
         #test run
-        self.__make_scatterplot(e=e)     
+        self.__make_scatterplot(newDates)     
     
     def __reset_plot(self) -> None:
         """
@@ -224,10 +241,10 @@ class Graphing(tk.Frame):
         chart.configure(width=plotWidth, height=plotHeight)
         chart.pack()
             
-    def __make_scatterplot(self, e:tk.Event=None) -> None:
+    def __make_scatterplot(self, formatDates:bool) -> None:
         '''
         GraphFrame.make_scaterplot(self, e): void\n
-        e: event handler: DO NOT CHANGE THIS VALUE
+        formatDates: bool: does we have new dates to update
 
         displays a scatterplot
         '''
@@ -250,10 +267,10 @@ class Graphing(tk.Frame):
 
             #else if the data are dates, convert to datetime
             elif self.graphAtts["xAreDates"]:
-                #if this function is executed by event handler,
-                # then x are already in the correct format.
-                #else, convert them to dates and filter them by timeframe
-                if not e:
+
+                #if the dates need to be formatted, then we got new dates
+                #update dates
+                if formatDates:
                     #convert all days to datetime to work with them easier
                     # filter them to be within specified timeframe
                     # the user wants
@@ -286,13 +303,13 @@ class Graphing(tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, e:tk.Event = None):
+    def __make_bar_graph(self, e = None):
         pass
 
-    def __make_line_chart(self, e:tk.Event = None):
+    def __make_line_chart(self, e = None):
         pass
 
-    def __make_pie_chart(self, e:tk.Event = None):
+    def __make_pie_chart(self, e = None):
         pass
 
     def __filter_dates(self):
@@ -438,6 +455,8 @@ class Graphing(tk.Frame):
 
 #### test  ####
 def main():
+    import random
+
     root = tk.Tk()
     root['bg'] = 'white'
 
@@ -499,7 +518,13 @@ def main():
     test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
                         pointSize=3, pointColor='black',xAreDates=True, timespan="3.Y")
     
-    test.create_graph()
+    color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
+
+    print(color)
+
+    test.update_data(pointColor=color, title="WHYYYYY")
+
+    root.update_idletasks()
 
     root.mainloop()
 

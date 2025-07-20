@@ -440,6 +440,14 @@ class Graphing(tk.Frame):
         cleans the data by filtering out None types and null\n
         reassigns self.xData and self.yData to be the cleaned data
         '''
+        #make sure xData and yData are the same length
+        #set the max length of both sequences to be the smallest length
+        # between both sequences
+        maxLength = min(len(self.xData), len(self.yData))
+
+        #slice both sequences to go up to the length of the smaller list
+        self.xData = self.xData[:maxLength]
+        self.yData = self.yData[:maxLength]
 
         #save data to dataframe
         data = pd.DataFrame({'x': self.xData, 'y': self.yData})

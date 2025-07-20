@@ -119,6 +119,7 @@ class Graphing(tk.Frame):
             updates the attributes of the chart and draws a new graph
         """
 
+        #update the data
         self.graphAtts.update(kwargs)
 
         self.__create_graph(newDates=False)

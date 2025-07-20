@@ -438,7 +438,7 @@ class Graphing(tk.Frame):
         independant: seq: x-axis values\n
         dependant: seq: y-axis values\n
         cleans the data by filtering out None types and null\n
-        returns DataFrame: {'x': independant, 'y': dependant}\n
+        reassigns self.xData and self.yData to be the cleaned data
         '''
 
         #save data to dataframe

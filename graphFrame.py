@@ -175,10 +175,10 @@ class Graphing(tk.Frame):
         """
         # set self.xValues passed independant values
         # and self.yValues to  and dependant values
-        self.xData, self.yData = independant, dependant
+        self.xData, self.yData = np.array(independant), np.array(dependant)
 
         #update self.graphAtts to be all attributes except the first two items
-        self.graphAtts = locals()
+        self.graphAtts = dict(locals())
         del self.graphAtts["independant"]
         del self.graphAtts["dependant"]
 
@@ -469,7 +469,7 @@ def main():
     root = tk.Tk()
     root['bg'] = 'white'
 
-    test = Graphing(
+    test:Graphing = Graphing(
         root,
         width = 400,
         height = 400
@@ -527,11 +527,15 @@ def main():
     test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
                         pointSize=3, pointColor='black',xAreDates=True, timespan="3.Y")
     
+    print(test.get_graph_atts())
+    
     color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
 
     print(color)
 
     test.update_data(pointColor=color, title="WHYYYYY")
+
+    print(test.get_graph_atts())
 
     root.update_idletasks()
 
@@ -539,3 +543,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    

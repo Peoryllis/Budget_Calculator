@@ -67,10 +67,10 @@ class Graphing(tk.Frame):
         '''
 
         #update graph mode
-        self.type = self._CHARTS[graphType]
+        self.type = self.__CHARTS[graphType]
 
         #draw the graph
-        self.create_graph()
+        self.__create_graph()
 
     def update_data(
             self,
@@ -79,44 +79,44 @@ class Graphing(tk.Frame):
             **kwargs
             ):
         """
-        GraphFrame.update_data(): None
+        GraphFrame.set_attributes(): None
 
         independant: iterable: list of all x values\n
             dates must be in MM/DD/YYYY format! \n
         dependent: iterable: list of all y values\n
-        kwargs: GraphFrame.set_attributs kwargs:\n
-            xName: str: x-axis label\n
-            yName: str: y-axis label\n
-            title: str: title of the graph\n
-            xAreDates: bool: treat x values as dates\n
-            treatAsText: bool: treat x values as plain text\n
-            timespan: str: num_iterations.unit_of_time | all\n
-                'W' -> Week\n
-                'M' -> Month\n
-                'Y' -> year\n
-                'all' -> all time\n
-            pointSize: int: size of the point\n
-            pointColor: str: pointColor\n
-            makeHistogram: bool: make the bar chart as a histogram\n
-            fillColor: str: color to fill bar chart\n
-            lineWidth: int: size of line for line chart\n
-            lineColor: str: color of line chart line\n
-            colorcode: seq[str]: list of all the colors to be used by pie chart\n
+        xName: str: x-axis label\n
+        yName: str: y-axis label\n
+        title: str: title of the graph\n
+        xAreDates: bool: treat x values as dates\n
+        treatAsText: bool: treat x values as plain text\n
+        timespan: str: num_iterations.unit_of_time | all\n
+            'W' -> Week\n
+            'M' -> Month\n
+            'Y' -> year\n
+            'all' -> all time\n
+        pointSize: int: size of the point\n
+        pointColor: str: pointColor\n
+        makeHistogram: bool: make the bar chart as a histogram\n
+        numBins: int: number of bins\n
+        fillColor: str: color to fill bar chart\n
+        lineWidth: int: size of line for line chart\n
+        lineColor: str: color of chart line\n
+        colorcode: seq[str]: list of all the colors to be used by pie chart\n
 
-            Used with all charts: xName, yName, title\n
+        Used with all charts: xName, yName, title\n
 
-            Unique to scatterplot: xAreDates, treatAsText, timespan, pointSize,
-            pointColor\n
+        Unique to scatterplot: xAreDates, treatAsText, timespan, pointSize,
+        pointColor\n
 
-            Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
-            pointColor, lineWidth, lineColor\n
+        Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
+        pointColor, lineWidth, lineColor\n
 
-            unique to bar chart: makeHistorgram, fillColor\n
+        unique to bar chart: makeHistorgram, fillColor, numBins\n
 
-            unique to pie chart: \n
-                - colorcode: iterable: list: list of colors to be used\n
+        unique to pie chart: \n
+            - colorcode: iterable: list: list of colors to be used\n
 
-            updates the attributes of the chart and draws a new graph
+        sets up the attributes for the chart and draws the graph
         """
 
         #update the data
@@ -127,10 +127,10 @@ class Graphing(tk.Frame):
     def set_attributes(
             self, independant:t.Iterable[t.Any] = (), 
             dependant:t.Iterable[int|float] = (),
-            *, xName: str = '', yName: str = '', title: str = '',
-            xAreDates: bool = False, treatAsText:bool = False, timespan:str = 'all',
+            *, xName:str = '', yName:str = '', title:str = '',
+            xAreDates:bool = False, treatAsText:bool = False, timespan:str = 'all',
             pointSize:int = 10, pointColor:str = 'black', makeHistogram:bool = False,
-            fillColor:str = "black", lineWidth:int = 5, lineColor:str = "black",
+            numBins:int = 10, fillColor:str = "black", lineWidth:int = 5, lineColor:str = "black",
             colorcode:t.Iterable[str] = ()
             ) -> None:
         
@@ -153,9 +153,10 @@ class Graphing(tk.Frame):
         pointSize: int: size of the point\n
         pointColor: str: pointColor\n
         makeHistogram: bool: make the bar chart as a histogram\n
+        numBins: int: number of bins\n
         fillColor: str: color to fill bar chart\n
         lineWidth: int: size of line for line chart\n
-        lineColor: str: color of line chart line\n
+        lineColor: str: color of chart line\n
         colorcode: seq[str]: list of all the colors to be used by pie chart\n
 
         Used with all charts: xName, yName, title\n
@@ -166,7 +167,7 @@ class Graphing(tk.Frame):
         Unique to line graph: xAreDates, treatAsText, timespan, pointSize,
         pointColor, lineWidth, lineColor\n
 
-        unique to bar chart: makeHistorgram, fillColor\n
+        unique to bar chart: makeHistorgram, fillColor, numBins\n
 
         unique to pie chart: \n
             - colorcode: iterable: list: list of colors to be used\n
@@ -199,7 +200,7 @@ class Graphing(tk.Frame):
             widget.destroy()
         
         #test run
-        self.__make_scatterplot(newDates)     
+        self.__make_bar_graph()     
     
     def __reset_plot(self) -> None:
         """
@@ -244,14 +245,11 @@ class Graphing(tk.Frame):
             
     def __make_scatterplot(self, formatDates:bool) -> None:
         '''
-        GraphFrame.make_scaterplot(self, e): void\n
-        formatDates: bool: does we have new dates to update
+        GraphFrame.make_scaterplot(self, formatDates): void\n
+        formatDates: bool: does we have new dates to update\n
 
         displays a scatterplot
         '''
-
-        #remove rows with no values
-        self.__clean_data()
 
         self.update_idletasks()
         self.master.update_idletasks()
@@ -260,6 +258,8 @@ class Graphing(tk.Frame):
         #if it is, then it means the window just opened without any data
         # and nothing should be plotted
         if self.graphAtts != {}:
+            #remove rows with no values
+            self.__clean_data()
 
             #if the data is text: convert to string
             #allows matplotlib to interpret data as as text, not numeric
@@ -304,8 +304,60 @@ class Graphing(tk.Frame):
             self.update_idletasks()
             self.master.update_idletasks()
 
-    def __make_bar_graph(self, e = None):
-        pass
+    def __make_bar_graph(self) -> None:
+        """
+        GraphFrame.__make_bar_graph(self): void\n
+
+        displays a bar graph
+        """
+
+        #update window
+        self.update_idletasks()
+
+        #if graphAtts is not empty, there is data to be plotted
+        #create the bar chart
+        if self.graphAtts != {}:
+
+            #clean data
+            self.__clean_data()
+
+            #reset plot -- clear the current plot from memory
+            self.__reset_plot()
+
+            #clean up x axis
+            self.fig.autofmt_xdate()
+            
+            #if the user wants a histogram: make the histogram
+            if self.graphAtts["makeHistogram"]:
+                self.ax.hist(
+                    self.xData,
+                    color=self.graphAtts["fillColor"],
+                    linewidth=self.graphAtts["lineWidth"],
+                    edgecolor=self.graphAtts["lineColor"],
+                    bins = self.graphAtts["numBins"]
+                    )
+
+            #else; they want a normal bar graph
+            else:
+                # draw the bar graph
+                self.ax.bar(
+                    self.xData,
+                    self.yData,
+                    color=self.graphAtts["fillColor"],
+                    linewidth=self.graphAtts["lineWidth"],
+                    edgecolor=self.graphAtts["lineColor"]
+                    )
+
+            #set the title, xLabel, yLabel, bar color, and outline thickness
+            self.ax.title.set_text(self.graphAtts["title"])
+            self.ax.title.set_text(self.graphAtts["title"])
+            self.ax.set_xlabel(self.graphAtts["xName"])
+            self.ax.set_ylabel(self.graphAtts["yName"])
+
+
+            #update the window
+            self.update_idletasks()
+
 
     def __make_line_chart(self, e = None):
         pass
@@ -440,26 +492,42 @@ class Graphing(tk.Frame):
         cleans the data by filtering out None types and null\n
         reassigns self.xData and self.yData to be the cleaned data
         '''
-        #make sure xData and yData are the same length
-        #set the max length of both sequences to be the smallest length
-        # between both sequences
-        maxLength = min(len(self.xData), len(self.yData))
 
-        #slice both sequences to go up to the length of the smaller list
-        self.xData = self.xData[:maxLength]
-        self.yData = self.yData[:maxLength]
+        #if the plot is not supposed to be a histogram
+        #filter the x and y axis  
+        if not self.graphAtts["makeHistogram"]:
 
-        #save data to dataframe
-        data = pd.DataFrame({'x': self.xData, 'y': self.yData})
+            #make sure xData and yData are the same length
+            #set tsequenceshe max length of both sequences to be the smallest length
+            # between both
+            maxLength = min(len(self.xData), len(self.yData))
 
-        #drop all rows with no values
-        data = data.dropna()
+            #slice both sequences to go up to the length of the smaller list
+            self.xData = self.xData[:maxLength]
+            self.yData = self.yData[:maxLength]
 
-        #declare the cleaned data to xData and yData
-        self.xData = data.x
-        self.yData = data.y
+            #save data to dataframe
+            data = pd.DataFrame({'x': self.xData, 'y': self.yData})
+
+            #drop all rows with no values
+            data = data.dropna()
+
+            #declare the cleaned data to xData and yData
+            self.xData = data.x
+            self.yData = data.y
+        
+        #if it is supposed to be a histogram, look at only x values
+        else:
+            data = pd.DataFrame({'x': self.xData})
+
+            #drop all rows with no values
+            data = data.dropna()
+
+            #declare the cleaned data to xData and yData
+            self.xData = data.x
 
         del data
+        
 
 
 #### test  ####
@@ -521,21 +589,21 @@ def main():
         x2[i] = "{}/{}/{}".format(month, day, year)
 
     y = y[:len(x2)]
-    
 
+    barX = ["California", "New Mexico", "New York", "Virginia", "Delaware"]
+    barY = [38_900_000, 2117522, 19867248, 8631393, 989948]
+    
+    histX = list(random.randrange(1, 100) for a in range(500))
 
-    test.set_attributes(x2, y, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black',xAreDates=True, timespan="3.Y")
-    
-    print(test.get_graph_atts())
-    
+    test.set_attributes(histX, xName='X', yName='Y', title='X Versus Y', 
+                        pointSize=3, pointColor='black',xAreDates=True,
+                        timespan="3.Y", lineWidth=1,
+                        makeHistogram=True, numBins=5)
+        
     color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
 
-    print(color)
+    test.update_data(fillColor=color, title="WHYYYYY")
 
-    test.update_data(pointColor=color, title="WHYYYYY")
-
-    print(test.get_graph_atts())
 
     root.update_idletasks()
 

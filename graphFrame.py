@@ -98,10 +98,9 @@ class Graphing(tk.Frame):
         pointColor: str: pointColor\n
         makeHistogram: bool: make the bar chart as a histogram\n
         numBins: int: number of bins\n
-        fillColor: str: color to fill bar chart\n
+        fillColor: str|iterable[str]: color(s) to fill bar chart\n
         lineWidth: int: size of line for line chart\n
         lineColor: str: color of chart line\n
-        colorcode: seq[str]: list of all the colors to be used by pie chart\n
 
         Used with all charts: xName, yName, title\n
 
@@ -112,9 +111,6 @@ class Graphing(tk.Frame):
         pointColor, lineWidth, lineColor\n
 
         unique to bar chart: makeHistorgram, fillColor, numBins\n
-
-        unique to pie chart: \n
-            - colorcode: iterable: list: list of colors to be used\n
 
         sets up the attributes for the chart and draws the graph
         """
@@ -130,8 +126,8 @@ class Graphing(tk.Frame):
             *, xName:str = '', yName:str = '', title:str = '',
             xAreDates:bool = False, treatAsText:bool = False, timespan:str = 'all',
             pointSize:int = 10, pointColor:str = 'black', makeHistogram:bool = False,
-            numBins:int = 10, fillColor:str = "black", lineWidth:int = 5, lineColor:str = "black",
-            colorcode:t.Iterable[str] = ()
+            numBins:int = 10, fillColor:str|t.Iterable[str] = "black",
+            lineWidth:int = 5, lineColor:str = "black",
             ) -> None:
         
         """
@@ -154,10 +150,9 @@ class Graphing(tk.Frame):
         pointColor: str: pointColor\n
         makeHistogram: bool: make the bar chart as a histogram\n
         numBins: int: number of bins\n
-        fillColor: str: color to fill bar chart\n
+        fillColor: str|iterable[str]: color(s) to fill bar chart\n
         lineWidth: int: size of line for line chart\n
         lineColor: str: color of chart line\n
-        colorcode: seq[str]: list of all the colors to be used by pie chart\n
 
         Used with all charts: xName, yName, title\n
 
@@ -168,9 +163,6 @@ class Graphing(tk.Frame):
         pointColor, lineWidth, lineColor\n
 
         unique to bar chart: makeHistorgram, fillColor, numBins\n
-
-        unique to pie chart: \n
-            - colorcode: iterable: list: list of colors to be used\n
 
         sets up the attributes for the chart and draws the graph
         """
@@ -329,13 +321,73 @@ class Graphing(tk.Frame):
             
             #if the user wants a histogram: make the histogram
             if self.graphAtts["makeHistogram"]:
-                self.ax.hist(
-                    self.xData,
-                    color=self.graphAtts["fillColor"],
-                    linewidth=self.graphAtts["lineWidth"],
-                    edgecolor=self.graphAtts["lineColor"],
-                    bins = self.graphAtts["numBins"]
-                    )
+
+                # create the histogram
+                n, bins, patches = self.ax.hist(
+                        self.xData,
+                        linewidth=self.graphAtts["lineWidth"],
+                        edgecolor=self.graphAtts["lineColor"],
+                        bins = self.graphAtts["numBins"]
+                        )
+
+                #make the colors
+
+                #if the user included a list of colors,
+                #iterate through each color and assign to bar graph
+
+                #create own flag variables 
+                # or else if statement will get long and confusing
+                isSeq = isinstance(self.graphAtts["fillColor"], t.Iterable)
+                isNotStr = not isinstance(self.graphAtts["fillColor"], str)
+                isListOfStrs = all(map(
+                    lambda value: isinstance(value, str) == True,
+                    self.graphAtts["fillColor"]
+                    ))
+
+                #now check the conditions
+                if (isSeq and isNotStr and isListOfStrs):
+                    # if user inputted less colors than there are
+                    # bins, iterate through user inputted colors
+                    # and add it to a new list of colors until they are the 
+                    #same length
+                    if len(self.graphAtts["fillColor"]) < len(patches):
+                        
+                        #index of graphAtts to reference
+                        index = 0
+
+                        # add the user inputted colors to colors
+                        colors = list(self.graphAtts["fillColor"])
+
+                        #add new color if there are less colors than bars
+                        while len(colors) < len(patches):
+                            #add a new color
+                            colors.append(self.graphAtts["fillColor"][index])
+
+                            #if index is at the last index of the list of
+                            #user inputted colors, reset index to 0
+                            if index == len(self.graphAtts["fillColor"]) - 1:
+                                index = 0
+                            #else, add 1 to index
+                            else:
+                                index += 1
+
+                    #else if there are more colors than bars, cut off the 
+                    #excess colors and assign to a new list
+                    elif len(self.graphAtts["fillColor"]) < len(patches):
+                        colors = self.graphAtts[:len(patches)]
+                    
+                    #else assign the fill color to a new list
+                    else:
+                        colors = list(self.graphAtts["fillColor"])
+                    
+                    #loop through the each bar and each color in colors
+
+                    for color, bar in zip(colors, patches):
+                        bar.set_facecolor(color)
+
+                else:
+                    self.ax.set_facecolor(self.graphAtts["fillColor"])
+
 
             #else; they want a normal bar graph
             else:
@@ -593,7 +645,7 @@ def main():
     barX = ["California", "New Mexico", "New York", "Virginia", "Delaware"]
     barY = [38_900_000, 2117522, 19867248, 8631393, 989948]
     
-    histX = list(random.randrange(1, 100) for a in range(500))
+    histX = list(random.randrange(1, 100) for a in range(59))
 
     test.set_attributes(histX, xName='X', yName='Y', title='X Versus Y', 
                         pointSize=3, pointColor='black',xAreDates=True,
@@ -601,8 +653,12 @@ def main():
                         makeHistogram=True, numBins=5)
         
     color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
+    color2 = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
 
-    test.update_data(fillColor=color, title="WHYYYYY")
+    test.update_data(
+        fillColor=(color, color2),
+        title="WHYYYYY"
+        )
 
 
     root.update_idletasks()

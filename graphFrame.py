@@ -281,7 +281,7 @@ class Graphing(tk.Frame):
                 self.xData,
                 self.yData,
                 s=self.graphAtts["pointSize"],
-                c=self.graphAtts["pointColor"]
+                color=self.graphAtts["pointColor"]
                 )
             
             #set axis labels
@@ -385,8 +385,10 @@ class Graphing(tk.Frame):
                     for color, bar in zip(colors, patches):
                         bar.set_facecolor(color)
 
+                #else, set the facecolor to one color
                 else:
-                    self.ax.set_facecolor(self.graphAtts["fillColor"])
+                    for bar in patches:
+                        bar.set_facecolor(self.graphAtts["fillColor"])
 
 
             #else; they want a normal bar graph
@@ -648,7 +650,7 @@ def main():
     histX = list(random.randrange(1, 100) for a in range(59))
 
     test.set_attributes(histX, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black',xAreDates=True,
+                        pointSize=3, pointColor='black',xAreDates=False,
                         timespan="3.Y", lineWidth=1,
                         makeHistogram=True, numBins=5)
         
@@ -656,7 +658,7 @@ def main():
     color2 = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
 
     test.update_data(
-        fillColor=(color, color2),
+        fillColor=color,
         title="WHYYYYY"
         )
 

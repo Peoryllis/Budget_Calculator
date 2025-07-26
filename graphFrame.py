@@ -5,6 +5,7 @@ Creates the graphs to display on the budget calculator
 """
 
 #import needed modules
+import random
 import tkinter as tk
 import numpy as np
 import pandas as pd
@@ -44,7 +45,7 @@ class Graphing(tk.Frame):
         # and graph attributes will be stored
         self.xData:list = []
         self.yData:list[int|float] = []
-        self.graphAtts:dict = {}
+        self.__graphAtts:dict = {}
 
         #allow graphs to change size with window size
         self.bind(
@@ -54,7 +55,7 @@ class Graphing(tk.Frame):
             )
         
     def get_graph_atts(self) -> dict:
-        return self.graphAtts
+        return self.__graphAtts
 
     def switch_graph(self, graphType:int) -> None:
         '''GraphFrame.switch_graph(graphType)\n
@@ -67,7 +68,13 @@ class Graphing(tk.Frame):
         '''
 
         #update graph mode
-        self.type = self.__CHARTS[graphType]
+
+        #if the programmer picked a valid option, make the choice the mode
+        if graphType in range(4):
+            self.type = self.__CHARTS[graphType]
+        else:
+            print("WARNING: Out of bounds choice picked.\n "+
+                  "Chart type is not updated.")
 
         #draw the graph
         self.__create_graph()
@@ -116,7 +123,7 @@ class Graphing(tk.Frame):
         """
 
         #update the data
-        self.graphAtts.update(kwargs)
+        self.__graphAtts.update(kwargs)
 
         self.__create_graph(newDates=False)
     
@@ -150,7 +157,8 @@ class Graphing(tk.Frame):
         pointColor: str: pointColor\n
         makeHistogram: bool: make the bar chart as a histogram\n
         numBins: int: number of bins\n
-        fillColor: str|iterable[str]: color(s) to fill bar chart\n
+        fillColor: str|iterable[str]: color(s) to fill bar chart/pie chart\n
+            - must be interable[str] for custom colors for pie chart \n
         lineWidth: int: size of line for line chart\n
         lineColor: str: color of chart line\n
 
@@ -170,10 +178,10 @@ class Graphing(tk.Frame):
         # and self.yValues to  and dependant values
         self.xData, self.yData = np.array(independant), np.array(dependant)
 
-        #update self.graphAtts to be all attributes except the first two items
-        self.graphAtts = dict(locals())
-        del self.graphAtts["independant"]
-        del self.graphAtts["dependant"]
+        #update self.__graphAtts to be all attributes except the first two items
+        self.__graphAtts = dict(locals())
+        del self.__graphAtts["independant"]
+        del self.__graphAtts["dependant"]
 
         #draw the graph
         self.__create_graph()
@@ -191,9 +199,19 @@ class Graphing(tk.Frame):
         for widget in self.winfo_children(): 
             widget.destroy()
         
-        #test run
-        self.__make_bar_graph()     
-    
+        #if the current type is bar graph, make a bar graph
+        if self.type == self.__CHARTS[0]:
+            self.__make_bar_graph()
+        #else if the current type is line plot, make a line plot
+        elif self.type == self.__CHARTS[1]:
+            self.__make_line_chart(newDates)
+        # else if the current type is scatter plot, make a scatter plot
+        elif self.type == self.__CHARTS[2]:
+            self.__make_scatterplot(newDates)
+        # else if the current type is pie chart, make a pie chart
+        elif self.type == self.__CHARTS[3]:
+            self.__make_pie_chart()
+           
     def __reset_plot(self) -> None:
         """
         Graph.__reset_plot(self, plotWidth, plotHeight, dpiRef) -> None
@@ -249,17 +267,17 @@ class Graphing(tk.Frame):
         #make sure reference dict is not empty
         #if it is, then it means the window just opened without any data
         # and nothing should be plotted
-        if self.graphAtts != {}:
+        if self.__graphAtts != {}:
             #remove rows with no values
             self.__clean_data()
 
             #if the data is text: convert to string
             #allows matplotlib to interpret data as as text, not numeric
-            if self.graphAtts["treatAsText"]:
+            if self.__graphAtts["treatAsText"]:
                 self.xData = self.xData.astype(str)
 
             #else if the data are dates, convert to datetime
-            elif self.graphAtts["xAreDates"]:
+            elif self.__graphAtts["xAreDates"]:
 
                 #if the dates need to be formatted, then we got new dates
                 #update dates
@@ -280,14 +298,14 @@ class Graphing(tk.Frame):
             self.ax.scatter(
                 self.xData,
                 self.yData,
-                s=self.graphAtts["pointSize"],
-                color=self.graphAtts["pointColor"]
+                s=self.__graphAtts["pointSize"],
+                color=self.__graphAtts["pointColor"]
                 )
             
             #set axis labels
-            self.ax.title.set_text(self.graphAtts["title"])
-            self.ax.set_xlabel(self.graphAtts["xName"])
-            self.ax.set_ylabel(self.graphAtts["yName"])
+            self.ax.title.set_text(self.__graphAtts["title"])
+            self.ax.set_xlabel(self.__graphAtts["xName"])
+            self.ax.set_ylabel(self.__graphAtts["yName"])
             
             #draw the chart
             self.graph.draw()
@@ -306,9 +324,9 @@ class Graphing(tk.Frame):
         #update window
         self.update_idletasks()
 
-        #if graphAtts is not empty, there is data to be plotted
+        #if __graphAtts is not empty, there is data to be plotted
         #create the bar chart
-        if self.graphAtts != {}:
+        if self.__graphAtts != {}:
 
             #clean data
             self.__clean_data()
@@ -320,14 +338,14 @@ class Graphing(tk.Frame):
             self.fig.autofmt_xdate()
             
             #if the user wants a histogram: make the histogram
-            if self.graphAtts["makeHistogram"]:
+            if self.__graphAtts["makeHistogram"]:
 
                 # create the histogram
                 n, bins, patches = self.ax.hist(
                         self.xData,
-                        linewidth=self.graphAtts["lineWidth"],
-                        edgecolor=self.graphAtts["lineColor"],
-                        bins = self.graphAtts["numBins"]
+                        linewidth=self.__graphAtts["lineWidth"],
+                        edgecolor=self.__graphAtts["lineColor"],
+                        bins = self.__graphAtts["numBins"]
                         )
 
                 #make the colors
@@ -337,11 +355,11 @@ class Graphing(tk.Frame):
 
                 #create own flag variables 
                 # or else if statement will get long and confusing
-                isSeq = isinstance(self.graphAtts["fillColor"], t.Iterable)
-                isNotStr = not isinstance(self.graphAtts["fillColor"], str)
+                isSeq = isinstance(self.__graphAtts["fillColor"], t.Iterable)
+                isNotStr = not isinstance(self.__graphAtts["fillColor"], str)
                 isListOfStrs = all(map(
                     lambda value: isinstance(value, str) == True,
-                    self.graphAtts["fillColor"]
+                    self.__graphAtts["fillColor"]
                     ))
 
                 #now check the conditions
@@ -350,22 +368,22 @@ class Graphing(tk.Frame):
                     # bins, iterate through user inputted colors
                     # and add it to a new list of colors until they are the 
                     #same length
-                    if len(self.graphAtts["fillColor"]) < len(patches):
+                    if len(self.__graphAtts["fillColor"]) < len(patches):
                         
-                        #index of graphAtts to reference
+                        #index of __graphAtts to reference
                         index = 0
 
                         # add the user inputted colors to colors
-                        colors = list(self.graphAtts["fillColor"])
+                        colors = list(self.__graphAtts["fillColor"])
 
                         #add new color if there are less colors than bars
                         while len(colors) < len(patches):
                             #add a new color
-                            colors.append(self.graphAtts["fillColor"][index])
+                            colors.append(self.__graphAtts["fillColor"][index])
 
                             #if index is at the last index of the list of
                             #user inputted colors, reset index to 0
-                            if index == len(self.graphAtts["fillColor"]) - 1:
+                            if index == len(self.__graphAtts["fillColor"]) - 1:
                                 index = 0
                             #else, add 1 to index
                             else:
@@ -373,12 +391,12 @@ class Graphing(tk.Frame):
 
                     #else if there are more colors than bars, cut off the 
                     #excess colors and assign to a new list
-                    elif len(self.graphAtts["fillColor"]) < len(patches):
-                        colors = self.graphAtts[:len(patches)]
+                    elif len(self.__graphAtts["fillColor"]) < len(patches):
+                        colors = self.__graphAtts[:len(patches)]
                     
                     #else assign the fill color to a new list
                     else:
-                        colors = list(self.graphAtts["fillColor"])
+                        colors = list(self.__graphAtts["fillColor"])
                     
                     #loop through the each bar and each color in colors
 
@@ -388,7 +406,7 @@ class Graphing(tk.Frame):
                 #else, set the facecolor to one color
                 else:
                     for bar in patches:
-                        bar.set_facecolor(self.graphAtts["fillColor"])
+                        bar.set_facecolor(self.__graphAtts["fillColor"])
 
 
             #else; they want a normal bar graph
@@ -397,28 +415,151 @@ class Graphing(tk.Frame):
                 self.ax.bar(
                     self.xData,
                     self.yData,
-                    color=self.graphAtts["fillColor"],
-                    linewidth=self.graphAtts["lineWidth"],
-                    edgecolor=self.graphAtts["lineColor"]
+                    color=self.__graphAtts["fillColor"],
+                    linewidth=self.__graphAtts["lineWidth"],
+                    edgecolor=self.__graphAtts["lineColor"]
                     )
 
             #set the title, xLabel, yLabel, bar color, and outline thickness
-            self.ax.title.set_text(self.graphAtts["title"])
-            self.ax.title.set_text(self.graphAtts["title"])
-            self.ax.set_xlabel(self.graphAtts["xName"])
-            self.ax.set_ylabel(self.graphAtts["yName"])
+            self.ax.title.set_text(self.__graphAtts["title"])
+            self.ax.title.set_text(self.__graphAtts["title"])
+            self.ax.set_xlabel(self.__graphAtts["xName"])
+            self.ax.set_ylabel(self.__graphAtts["yName"])
 
 
             #update the window
             self.update_idletasks()
 
 
-    def __make_line_chart(self, e = None):
-        pass
+    def __make_line_chart(self, formatDates: bool) -> None:
+        '''
+        GraphFrame.make_line_chart(self, formatDates): void\n
+        formatDates: bool: does we have new dates to update\n
+
+        displays a scatterplot
+        '''
+
+        self.update_idletasks()
+        self.master.update_idletasks()
+
+        #make sure reference dict is not empty
+        #if it is, then it means the window just opened without any data
+        # and nothing should be plotted
+        if self.__graphAtts != {}:
+            #remove rows with no values
+            self.__clean_data()
+
+            #if the data is text: convert to string
+            #allows matplotlib to interpret data as as text, not numeric
+            if self.__graphAtts["treatAsText"]:
+                self.xData = self.xData.astype(str)
+
+            #else if the data are dates, convert to datetime
+            elif self.__graphAtts["xAreDates"]:
+
+                #if the dates need to be formatted, then we got new dates
+                #update dates
+                if formatDates:
+                    #convert all days to datetime to work with them easier
+                    # filter them to be within specified timeframe
+                    # the user wants
+                    self.__filter_dates()
+
+            #reset the matplotlib plot -- remove current one from memory.
+            #create new blank slate
+            self.__reset_plot()
+
+            #reduce clutter of x axis
+            self.fig.autofmt_xdate()
+
+            #graph the scatter plot
+            self.ax.plot(
+                self.xData,
+                self.yData,
+                color=self.__graphAtts["lineColor"]
+                )
+            
+            #set axis labels
+            self.ax.title.set_text(self.__graphAtts["title"])
+            self.ax.set_xlabel(self.__graphAtts["xName"])
+            self.ax.set_ylabel(self.__graphAtts["yName"])
+            
+            #draw the chart
+            self.graph.draw()
+
+            #update the window
+            self.update_idletasks()
+            self.master.update_idletasks()
 
     def __make_pie_chart(self, e = None):
-        pass
+        """
+        GraphFrame.__make_pie_chart(self)
+        creates a plot of a pie chart
+        """
 
+        #update the window
+        self.update_idletasks()
+        self.master.update_idletasks()
+
+        #if __graphAtts is not an empty dictionary, there is data to process
+        # graph the pie chart
+        if self.__graphAtts != {}:
+            #reset plot
+            self.__reset_plot()
+
+            #clean data
+            self.__clean_data()
+
+            #if the user inputted a list, color the pie chart based on
+            # developer input.
+            if (isinstance(self.__graphAtts["fillColor"], t.Iterable)
+                and not isinstance(self.__graphAtts["fillColor"], str)):
+
+                # initialize variable to create a copy of dev inputted colors
+                colors = list(self.__graphAtts["fillColor"])
+
+                #if there are less colors than pie slices: add random colors 
+                #until there are the same amount of colors and pie slices
+                if len(colors) < len(self.xData):
+                    #while length of colors < num pie slices: add new color
+                    while len(colors) < len(self.xData):
+                        #generate a random color
+                        newColor = ("#" + "".join(
+                            random.choice("ABCDEF1234567890") 
+                            for i in range(6)
+                            ))
+                        
+                        #add random color to the list of colors
+                        colors.append(newColor)
+
+                #else if there are more colors than number of slices: reduce
+                #list of colors length
+                elif len(colors) > len(self.xData):
+                    # cut off the excess colors from the list of colors
+                    colors = colors[:len(self.xData)]
+
+                #draw the pie chart
+                patches, text, autotexts = self.ax.pie(
+                    self.yData,
+                    labels=self.xData,
+                    colors=colors,
+                    autopct="%1.1f%%"
+                )
+
+            #else; dev did not input custom color list:
+            else:
+                # draw the pie chart without user inputted data
+                patches, text, autotexts = self.ax.pie(
+                    self.yData,
+                    labels=self.xData,
+                    autopct="%1.1f%%"
+                )
+
+            #set font to readable size
+            for label, pctLabels in zip(text, autotexts):
+                    label.set_fontsize(16.0)
+                    pctLabels.set_fontsize(14.0)
+                    
     def __filter_dates(self):
         """
         GraphFrame.__filter_dates(self)
@@ -429,9 +570,9 @@ class Graphing(tk.Frame):
         self.__convert_to_datetime()
 
         #check to see if user wants all time; if not, filter by timespan
-        if self.graphAtts['timespan'].lower() != "all":
+        if self.__graphAtts['timespan'].lower() != "all":
             #get the desired timeframe
-            timeFrame = self.graphAtts["timespan"].split(".")
+            timeFrame = self.__graphAtts["timespan"].split(".")
 
             #cast the M/W/Y noatation to uppercase
             #reduces case sensitivity
@@ -493,11 +634,7 @@ class Graphing(tk.Frame):
     def __convert_to_datetime(self) -> None:
         '''
         GraphFrame.convert_to_datetime(dates)\n
-        dates: seq: str: valid dates separated by '/'\n
-            dates must be in month/day/YYYY format\n
-            Warning: if not in YYYY format, your dates may be off\n
-        converts all the dates in the sequence to datetime format\n
-        returns list: datetime.dates\n
+        converts x-axis dates to datetime format\n
         '''
         #store the dates in a new format and save it to variable
         tempIndependant = []
@@ -541,15 +678,13 @@ class Graphing(tk.Frame):
     def __clean_data(self) -> None:
         '''
         GraphFrame.clean_data(independant, dependant)\n
-        independant: seq: x-axis values\n
-        dependant: seq: y-axis values\n
         cleans the data by filtering out None types and null\n
         reassigns self.xData and self.yData to be the cleaned data
         '''
 
         #if the plot is not supposed to be a histogram
         #filter the x and y axis  
-        if not self.graphAtts["makeHistogram"]:
+        if not self.__graphAtts["makeHistogram"]:
 
             #make sure xData and yData are the same length
             #set tsequenceshe max length of both sequences to be the smallest length
@@ -586,8 +721,6 @@ class Graphing(tk.Frame):
 
 #### test  ####
 def main():
-    import random
-
     root = tk.Tk()
     root['bg'] = 'white'
 
@@ -649,16 +782,25 @@ def main():
     
     histX = list(random.randrange(1, 100) for a in range(59))
 
-    test.set_attributes(histX, xName='X', yName='Y', title='X Versus Y', 
-                        pointSize=3, pointColor='black',xAreDates=False,
+    test.switch_graph(3)
+
+    test.set_attributes(barX, barY, xName='X', yName='Y', title='X Versus Y', 
+                        pointSize=3, pointColor='black',xAreDates=True,
                         timespan="3.Y", lineWidth=1,
-                        makeHistogram=True, numBins=5)
+                        makeHistogram=False)
         
     color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
     color2 = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
 
+    colorList = []
+    for i in range(7):
+        color = ("#" +
+                "".join(random.choice("ABCDEF1234567890") for i in range(6)))
+        
+        colorList.append(color)
+
     test.update_data(
-        fillColor=color,
+        lineColor=color,
         title="WHYYYYY"
         )
 

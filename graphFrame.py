@@ -670,8 +670,14 @@ class Graphing(tk.Frame):
         closes the window
         """
         #close the plot
-        plt.close("all")
-
+        if hasattr(self, "fig"):
+            self.fig.clear()
+            del self.fig
+        
+        if hasattr(self, "ax"):
+            self.ax.clear()
+            del self.ax
+        
         #destory the frame
         self.destroy()
 
@@ -721,6 +727,8 @@ class Graphing(tk.Frame):
 
 #### test  ####
 def main():
+    import time 
+
     root = tk.Tk()
     root['bg'] = 'white'
 
@@ -804,8 +812,6 @@ def main():
         title="WHYYYYY"
         )
 
-
-    root.update_idletasks()
 
     root.mainloop()
 

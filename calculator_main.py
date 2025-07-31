@@ -10,9 +10,12 @@ Also saves + retrieves data to & from the computer
 import tkinter as tk
 import time
 import sys
+import pickle
+import numpy as np
+import pandas as pd
 
 #import the different parts of the program
-import graphFrame
+from graphFrame import Graphing
 
 #import my special tkinter objects
 sys.path.append(
@@ -43,115 +46,78 @@ class Budget_Calculator(tk.Frame):
         self.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         #title of project
-        title = tk.Label( 
+        title:tk.Label = tk.Label( 
             root,
             bg=root['bg'],
             fg='white',
             text='Budget Calculator',
-            font=('Georgia', 26, 'bold'),
+            font=('Playerite US', 30, 'bold'),
         )
 
         #set relative position of all the widgets, instead of a fixed position
 
-        title.place(relx=0.5, rely=0, relwidth=0.5, relheight=0.05, anchor='n') 
+        title.place(
+            relx=0.5,
+            rely=0, relwidth=0.5,
+            relheight=0.05,
+            anchor='n'
+            ) 
 
         #give selected and unselected tabs two distinct colors
         #selected tabs are a few shaeds darker than unselected tabs
 
-        self.unselectedColor = [list(tk2.hex_to_rgb(self['bg'])), self['bg']] 
+        self.__unselectedColor:list = (list(tk2.hex_to_rgb(self['bg'])), self['bg'])
         self.selectedColor = [
-             tuple(value - 50 for value in self.unselectedColor[0]),           
+             tuple(value - 50 for value in self.__unselectedColor[0]),           
         ]
 
 
         self.selectedColor.append(tk2._from_rgb(self.selectedColor[0]))
 
-        self.modes = [
+        self.__MODES:list[str] = [
             'income and savings',
             'expenses',
             'analysis',
-            'investments'
+            'investments',
+            'taxes'
             ] #keep track of all possible modes
         
-        self.selectedMode = self.modes[0] #know what mode you are in
+        self.selectedMode:str = self.__MODES[0] #know what mode you are in
 
 
         #keep the tabs in a narrow frame about right next to each other
 
-        tabFrame = tk.Frame(self, bg=self['bg'])
+        tabFrame:tk.Frame = tk.Frame(self, bg=self['bg'])
 
 
-        tabFrame.place(relx=0, rely=0.052, relwidth=1) 
+        tabFrame.place(relx=0, rely=0.08, relwidth=1) 
 
-        #create a button have user select the income section -- tkinter.Button not working on MacOS
+        # set a tab for each of the modes
+        # store it to an empty dictionary
+        tabs:dict[str, tk.Label] = {}
 
-        self.incomeTab = tk.Label(
-            tabFrame, 
-            text=self.modes[0],
-            font=('Georgia', 24,),
-            fg='white',
-            bg=self.unselectedColor[1],
-            relief='groove'
+        # go through each element in the tabs
+        # add the corresponding tab to the app
+
+        for index, label in enumerate(self.__MODES):
+            tabs[label] = tk.Label(
+                tabFrame,
+                font=("Georgia", 24),
+                fg="White",
+                bg=self.__unselectedColor[1],
+                text=label.capitalize(),
             )
-        
-        #make it a working button
-        self.incomeTab.bind('<Button>', lambda: self.set_mode(0)) 
-        
-        self.incomeTab.grid(row=0, column=0, padx=2) #place it on the screen
 
-        #create a button have user select the income analysis section
+            #place the label
+            tabs[label].grid(row=0, column=index, ipadx=2)
 
-        self.expensesTab = tk.Label(
-            tabFrame,
-            text=self.modes[1],
-            font=('Georgia', 24,),
-            fg='white',
-            bg=self.unselectedColor[1],
-            relief='groove' 
-            )
-        
-        self.expensesTab.bind('Button', lambda: self.set_mode(1)) #make it a working button
-        
-        #use grid() to place the analysis tabs right next to each other with consistent space between the tabs easily
-        
-        self.expensesTab.grid(row=0, column=1, padx=2)
-
-        #create a button have user select the budget for desires button section
-
-        self.budgetTab = tk.Label(
-            tabFrame, 
-            text=self.modes[2],
-            font=('Georgia', 24,),
-            fg='white',
-            bg=self.selectedColor[1],
-            relief='groove'
-            )
-        
-         #make it a working button
-        self.budgetTab.bind('<Button>', lambda: self.set_mode(2))
-        
-        self.budgetTab.grid(row=0, column=2, padx=2) #place it on the screen
-
-        #create a button have user select the budget for desires button section
-
-        self.investmentsTab = tk.Label(
-            tabFrame, 
-            text=self.modes[3],
-            font=('Georgia', 24,),
-            fg='white',
-            bg=self.unselectedColor[1],
-            relief='groove'
-            )
-        
-         #make it a working button
-        self.investmentsTab.bind('<Button>', lambda: self.set_mode(3))
-        
-        self.investmentsTab.grid(row=0, column=3, padx=2) #place it on the screen
+            #allow the label to change mode of window
+            tabs[label].bind("<Button>", lambda e: self.__set_mode(index))
 
 
 
         #allow people to save their data
-        self.saveButton = tk.Label( 
+        self.saveButton:tk.Label = tk.Label( 
             self,
             text='Save',
             font=('Georgia', 18, 'bold'),
@@ -167,8 +133,9 @@ class Budget_Calculator(tk.Frame):
             relheight=0.05,
             anchor='ne'
         )
+        
 
-        self.window = tk.Frame(
+        self.window:tk.Frame = tk.Frame(
             self,
             bg=self.selectedColor[1]
         )
@@ -179,7 +146,7 @@ class Budget_Calculator(tk.Frame):
 
          #figure out where the main window should begin
 
-        starty = (float(tabFrame.place_info()['rely']) +
+        starty:float = (float(tabFrame.place_info()['rely']) +
                   float(tabFrame.winfo_height()/self.winfo_height()))
 
         #above code allows for less messy placement of the window
@@ -196,9 +163,10 @@ class Budget_Calculator(tk.Frame):
         self.incomeAnalysisFrame = None
         self.spendingsFrame = None
         self.investmentsFrame = None
+        self.taxesFrame = None
 
-        self.CurrentModeIndex = 0 #set default mode
-        self.set_mode(0)
+        self.CurrentModeIndex:int|None = None #set default mode
+        self.__set_mode(0)
         self.revive_data() # get data previously saved
 
         #we put this last to make sure users do not accidentally save unused data
@@ -209,7 +177,7 @@ class Budget_Calculator(tk.Frame):
 
         self.master.update()
 
-    def set_mode(self, value):
+    def __set_mode(self, value):
         pass 
     def save_data(self):
         pass

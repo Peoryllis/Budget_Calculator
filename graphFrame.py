@@ -16,11 +16,29 @@ import math
 import datetime
 from datetime import datetime as dt 
 import typing as t
+from enum import Enum
 
 sys.path.append('/Users/anayaahanotu/Documents/Coding/GitHub/')
 
+#declare charts enum
+class Charts(Enum):
+    BAR_CHART = "BAR CHART"
+    LINE_PLOT = "LINE PLOT"
+    SCATTER_PLOT = "SCATTER PLOT"
+    PIE_CHART = "PIE CHART"
+
+
+
+#declare the graphing class
 class Graphing(tk.Frame):
-    '''Make a Frame to display different graphs'''
+    '''
+    Make a Frame to display different graphs
+    During the initial instantiation, there will be a warning that a chart is
+    not created. This is because a chart has not been selected yet. 
+    '''
+
+    #give the list of charts (referenced later in code)
+    __CHARTS = tuple(item.value for item in Charts)
     
     def __init__(self, master:tk.Frame|tk.Tk, **kwargs):
         '''GraphFrame(args, kwargs):\n
@@ -34,19 +52,14 @@ class Graphing(tk.Frame):
         #initialize self
         tk.Canvas.__init__(self, master, **kwargs) 
 
-        #give the list of charts and set the mode
-        #these are meant to be private atts 
-        #but would have to change a whole bunch of code to update
-        self.__CHARTS:tuple[str] = (
-            'Bar Chart', 'Line plot', 'Scatter plot', 'Pie Chart'
-            )
-        self.type:str = self.__CHARTS[0]
-
         # initialize where independant, dependant
         # and graph attributes will be stored
         self.xData:list = []
         self.yData:list[int|float] = []
         self.__graphAtts:dict = {}
+
+         #initialize the type
+        self.type:Charts = Charts
 
         #allow graphs to change size with window size
         self.bind(
@@ -55,30 +68,38 @@ class Graphing(tk.Frame):
             "+"
             )
         
+        print("Ignore the following error: ", end="")
+        
     def get_graph_atts(self) -> dict:
         return self.__graphAtts
 
-    def switch_graph(self, graphType:int) -> None:
-        '''GraphFrame.switch_graph(graphType)\n
-        graphType: int: numeric representation of graph to be shown\n
-            0: Bar Chart\n
-            1: Line plot\n
-            2: Scatter Plot\n
-            3: Pie Chart\n
-        switches the graph to be displayed
+    def switch_graph(self, graphType:str) -> None:
+        '''
+        GraphFrame.switch_graph(graphType)\n
+        graphType: str: any enum value for Charts\n
+            - "BAR CHART"\n
+            - "LINE PLOT"\n
+            - "SCATTER PLOT"\n
+            - "PIE CHART"\n
+            input is not case sensitive\n
+
+        creates a chart
         '''
 
-        #update graph mode
+        #check if developer made proper option
+        # if so, update self.type and create the graph 
+        if graphType.upper() in self.__CHARTS:
+            self.type = Charts(graphType.upper())
 
-        #if the programmer picked a valid option, make the choice the mode
-        if graphType in range(4):
-            self.type = self.__CHARTS[graphType]
+             #draw the graph
+            self.__create_graph()
+
+        #else, warn the programmer that an invalid option was selected
         else:
-            print("WARNING: Out of bounds choice picked.\n "+
-                  "Chart type is not updated.")
-
-        #draw the graph
-        self.__create_graph()
+            print(f"ERROR: Invalid argument for switch_graph. "
+                  + f"You selected: '{graphType}'. "
+                  + "Graph was not updated.\n"
+                  + f"Please choose any: {self.__CHARTS}")
 
     def update_data(
             self,
@@ -199,19 +220,20 @@ class Graphing(tk.Frame):
         #make sure we don't end up with multiple charts in one frame
         for widget in self.winfo_children(): 
             widget.destroy()
-        
-        #if the current type is bar graph, make a bar graph
-        if self.type == self.__CHARTS[0]:
-            self.__make_bar_graph()
-        #else if the current type is line plot, make a line plot
-        elif self.type == self.__CHARTS[1]:
-            self.__make_line_chart(newDates)
-        # else if the current type is scatter plot, make a scatter plot
-        elif self.type == self.__CHARTS[2]:
-            self.__make_scatterplot(newDates)
-        # else if the current type is pie chart, make a pie chart
-        elif self.type == self.__CHARTS[3]:
-            self.__make_pie_chart()
+
+        # draw the graph that corresponds to the current chart selected
+        match self.type:
+            case Charts.BAR_CHART:
+                self.__make_bar_graph()
+            case Charts.LINE_PLOT:
+                self.__make_line_chart(formatDates=newDates)
+            case Charts.SCATTER_PLOT:
+                self.__make_scatterplot(formatDates=newDates)
+            case Charts.PIE_CHART:
+                self.__make_pie_chart
+            #if no valid option is used, warn the programmer
+            case _:
+                print(f"ERROR: invalid bar type: {self.type}. Chart not created") 
            
     def __reset_plot(self) -> None:
         """
@@ -722,4 +744,54 @@ class Graphing(tk.Frame):
             #declare the cleaned data to xData and yData
             self.xData = data.x
 
-        del data  
+        del data 
+
+def main():
+    import random
+    root = tk.Tk()
+
+    root.geometry("500x500")
+
+    x = np.arange(-10, 10, 0.01)
+
+    y = []
+
+    phi = (1 + math.sqrt(5)) / 2
+
+    for a in x:
+        try:
+            value = a**2 + math.sin(a)
+
+            if (-50 <= value <= 50):
+                y.append(value)
+            else:
+                y.append(None)
+                
+        except Exception:
+            y.append(None)
+
+    chart:Graphing = Graphing(root)
+    
+    chart.pack(fill=tk.BOTH, expand=True)
+
+    color = "#" + "".join(random.choice("ABCDEF1234567890") for i in range(6))
+
+    chart.set_attributes(
+        independant=x,
+        dependant=y,
+        xName="WTF",
+        yName="WTH",
+        pointColor=color,
+        title="NOOOOOOOO"
+    )
+
+    chart.switch_graph("")
+
+
+    root.mainloop()
+
+
+
+
+if __name__ == "__main__":
+    main()

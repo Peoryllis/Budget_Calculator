@@ -28,10 +28,11 @@ class Graphing(tk.Frame):
             **kwargs: tkinter.Canvas parameters -- NOT 'bg'
         '''
 
-        if "bg" in kwargs: del kwargs["bg"] #make sure bg is not added twice
+        #make sure bg is not added twice
+        if "bg" not in kwargs: kwargs["bg"] = "white" 
 
         #initialize self
-        tk.Canvas.__init__(self, master, bg='white', **kwargs) 
+        tk.Canvas.__init__(self, master, **kwargs) 
 
         #give the list of charts and set the mode
         #these are meant to be private atts 
@@ -250,7 +251,7 @@ class Graphing(tk.Frame):
         #put the scatterplot on the frame
         self.graph = FigureCanvasTkAgg(self.fig, self)
         chart = self.graph.get_tk_widget()
-        chart.configure(width=plotWidth, height=plotHeight)
+        chart.configure(width=plotWidth, height=plotHeight, bg=self["bg"])
         chart.pack()
             
     def __make_scatterplot(self, formatDates:bool) -> None:

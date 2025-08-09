@@ -785,7 +785,8 @@ def main():
         title="NOOOOOOOO"
     )
 
-    chart.switch_graph("")
+    chart.switch_graph("SCATTER PLOT")
+
 
 
     root.mainloop()
